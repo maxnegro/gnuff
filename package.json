@@ -21,6 +21,7 @@
         "vue": "^3.4.0"
     },
     "dependencies": {
-        "@teckel/vue-barcode-reader": "^1.1.8"
+        "@teckel/vue-barcode-reader": "^1.1.8",
+        "vue-toastification": "^2.0.0-rc.5"
     }
 }

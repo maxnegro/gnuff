@@ -1,4 +1,38 @@
 <template>
+  <div>
+  <!-- Overlay prodotto -->
+  <div
+    v-if="showOverlay"
+    class="absolute inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center p-6 z-50"
+  >
+    <h2 class="text-2xl font-bold mb-2 text-white">{{ product.name }}</h2>
+    <img :src="product.image_url" alt="" class="max-h-48 object-contain mb-4" v-if="product.image_url" />
+    <p class="text-sm text-gray-300 mb-2">Barcode: {{ product.barcode }}</p>
+
+    <div class="flex gap-4 my-4">
+      <button
+        v-for="opt in ratingOptions"
+        :key="opt.value"
+        :class="[
+          'text-4xl transition transform hover:scale-110',
+          productRating === opt.value ? 'opacity-100' : 'opacity-50'
+        ]"
+        @click="submitRating(opt.value)"
+      >
+        {{ opt.emoji }}
+      </button>
+    </div>
+
+    <button
+      @click="closeOverlay"
+      class="mt-6 bg-white text-black px-4 py-2 rounded-full hover:bg-gray-200 transition"
+    >
+      Chiudi
+    </button>
+  </div>
+  <!-- Fine Overlay prodotto -->
+
+
   <div class="p-6 space-y-4">
     <h1 class="text-xl font-bold">Scanner prodotto</h1>
 
@@ -11,31 +45,8 @@
         {{ scannerPaused ? '▶️ Riprendi' : '⏸️ Pausa' }}
       </button>
     </div>
-
-    <div v-if="product" class="mt-4 border-t pt-4">
-      <h2 class="text-lg font-semibold">{{ product.name }}</h2>
-      <img :src="product.image_url" alt="" v-if="product.image_url" class="w-32 h-auto mt-2" />
-
-      <div v-if="alreadyRated">
-        <p>Questo prodotto è:</p>
-        <p class="text-2xl">
-          {{ selectedRating.emoji }} ({{ selectedRating.label }})
-        </p>
-      </div>
-
-
-      <div class="mt-4 space-x-2">
-        <button v-for="option in ratingOptions" :key="option.value" @click="submitRating(option.value)"
-          class="text-2xl">
-          {{ option.emoji }} {{ option.label }}
-        </button>
-      </div>
-    </div>
-
-    <div v-if="message" class="mt-4 text-green-700 font-semibold">
-      {{ message }}
-    </div>
   </div>
+</div>
 </template>
 
 <script setup>
@@ -52,9 +63,10 @@ const torchEnabled = ref(false);
 const scannerPaused = ref(false);
 const product = ref(null);
 const message = ref('');
-const rating = ref('');
+const productRating = ref('');
 const alreadyRated = ref(false);
-const selectedRating = computed(() => ratingOptions.find(opt => opt.value === rating.value));
+const selectedRating = computed(() => ratingOptions.find(opt => opt.value === productRating.value));
+const showOverlay = ref(false);
 
 const ratingOptions = [
   { value: 'gnuf', emoji: '😋', label: 'Gnuf' },
@@ -74,20 +86,21 @@ function togglePause() {
 async function onResult(result) {
   if (result.format == 7 ) {
     scannerPaused.value = true;
-    message.value = '';
     try {
       const response = await axios.get(`/product/${result.text}`);
       if (response.data.rating) {
-        rating.value = response.data.rating;
+        productRating.value = response.data.rating;
         alreadyRated.value = true;
       } else {
-        rating.value = null;
+        productRating.value = null;
         alreadyRated.value = false;
       }
       product.value = response.data.product;
+      showOverlay.value = true;
     } catch (error) {
-      message.value = `Prodotto non trovato (${error})`;
+      console.error('Errore nella ricerca prodotto', error);
       product.value = null;
+      productRating.value = null;
     }
   }
 }
@@ -98,7 +111,9 @@ function onError(err) {
 
 async function submitRating(value) {
   if (!product.value) return;
-
+  const old = productRating.value;
+  productRating.value = value;
+  
   try {
     const response = await axios.post('/rate', {
       barcode: product.value.barcode,
@@ -106,9 +121,18 @@ async function submitRating(value) {
     });
     message.value = response.data.message || 'Valutazione salvata!';
   } catch (error) {
+    productRating.value = old;
     message.value = 'Errore durante il salvataggio.';
   }
 }
+
+const closeOverlay = () => {
+  showOverlay.value = false;
+  product.value = null;
+  productRating.value = null;
+  scannerPaused.value = false;
+};
+
 </script>
 
 <style scoped>
