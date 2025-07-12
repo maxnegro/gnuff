@@ -2,24 +2,42 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Rating;
+use App\Models\Product;
 
 class RatingController extends Controller
 {
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'barcode' => 'required|string',
-            'rating' => 'required|in:gnuf,ok,meh,bleah',
+            'value' => 'required|in:gnuf,ok,meh,bleah',
         ]);
 
-        $product = \App\Models\Product::firstOrCreate(['barcode' => $validated['barcode']]);
-
-        $rating = Rating::updateOrCreate(
-            ['user_id' => $request->user()->id, 'product_id' => $product->id],
-            ['rating' => $validated['rating']]
+        $product = Product::firstOrCreate(
+            ['barcode' => $request->barcode],
+            ['name' => 'Prodotto sconosciuto']
         );
 
-        return response()->json(['success' => true, 'data' => $rating]);
+        $rating = Rating::updateOrCreate(
+            [
+                'user_id' => Auth::id(),
+                'product_id' => $product->id,
+            ],
+            [
+                'rating' => $request->value,
+            ]
+        );
+
+        return response()->json(['message' => 'Valutazione salvata', 'rating' => $rating]);
     }
+
+    public function userRatings()
+    {
+        $ratings = auth()->user()->ratings()->with('product')->latest()->take(10)->get();
+
+        return response()->json($ratings);
+    }
+
 }
