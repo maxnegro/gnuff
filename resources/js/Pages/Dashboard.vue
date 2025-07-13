@@ -53,15 +53,16 @@ onMounted(() => {
             <li v-for="rating in ratings" :key="rating.id" class="border p-3 rounded">
                 <div class="flex justify-between items-center">
                     <div>
-                        <strong>{{ rating.product.name }}</strong>
+                      <strong>{{ rating.product.name }}</strong>
                         <div class="text-sm text-gray-600">Barcode: {{ rating.product.barcode }}</div>
+                        <div class="text-xs text-gray-500 mt-1">
+                          Valutato il {{ new Date(rating.updated_at).toLocaleString() }}
+                        </div>
                     </div>
                     <div class="text-2xl">
-                      {{ emojiMap[rating.value] || '❓' }}
+                      {{ emojiMap[rating.rating] || '❓' }}
+                      {{ rating.rating }}
                     </div>
-                </div>
-                <div class="text-xs text-gray-500 mt-1">
-                    Valutato il {{ new Date(rating.created_at).toLocaleString() }}
                 </div>
             </li>
       </ul>

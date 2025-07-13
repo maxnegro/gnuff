@@ -5,6 +5,7 @@
     v-if="showOverlay"
     class="absolute inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center p-6 z-50"
   >
+    <div class="flex flex-col items-center justify-center" v-if="message"><p class="text-gray-300">{{ message }}</p></div>
     <h2 class="text-2xl font-bold mb-2 text-white">{{ product.name }}</h2>
     <img :src="product.image_url" alt="" class="max-h-48 object-contain mb-4" v-if="product.image_url" />
     <p class="text-sm text-gray-300 mb-2">Barcode: {{ product.barcode }}</p>
@@ -87,6 +88,7 @@ async function onResult(result) {
   if (result.format == 7 ) {
     scannerPaused.value = true;
     try {
+      message.value = null;
       const response = await axios.get(`/product/${result.text}`);
       if (response.data.rating) {
         productRating.value = response.data.rating;
