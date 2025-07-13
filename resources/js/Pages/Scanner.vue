@@ -34,7 +34,7 @@
             <div class="p-6 space-y-4" style="min-height: 93vh;">
               <h1 class="text-xl font-bold">Scanner prodotto</h1>
 
-              <StreamBarcodeReader :no-front-camera @result="onResult" @error="onError" :paused="scannerPaused"
+              <StreamBarcodeReader v-if="!scannerPaused" :no-front-camera @result="onResult" @error="onError" 
                 :torch="torchEnabled" />
 
               <div class="flex items-center gap-4">
