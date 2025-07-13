@@ -8,7 +8,7 @@
 
         <!-- PWA related headers -->
         <link rel="manifest" href="/manifest.webmanifest" />
-        <link rel="icon" href="/icons/icon-192.png" />
+        <link rel="icon" href="/img/icon-192.png" />
         <meta name="theme-color" content="#10b981" />
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">

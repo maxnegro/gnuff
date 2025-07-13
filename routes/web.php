@@ -25,11 +25,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Product lookup
     Route::get('/product/{barcode}', [ProductController::class, 'show'])->name('product.show');
 
+    // Save product name
+    Route::post('/product', [ProductController::class, 'store'])->name('product.store');
+
     // Submit rating
     Route::post('/rate', [RatingController::class, 'store'])->name('rating.store');
 
     // Get latest ratings
     Route::get('/user/ratings', [RatingController::class, 'userRatings']);
+
 });
 
 Route::middleware('auth')->group(function () {

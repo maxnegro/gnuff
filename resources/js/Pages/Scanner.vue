@@ -12,7 +12,11 @@
                 <p class="text-gray-300">{{ message }}</p>
               </div>
               <h2 class="text-2xl font-bold mb-2 text-white">{{ product.name }}</h2>
-              <img :src="product.image_url" alt="" class="max-h-48 object-contain mb-4" v-if="product.image_url" />
+              <div v-if="product && !product.name">
+                <input v-model="productName" class="border p-2 my-2 w-full" placeholder="Nome prodotto" />
+                <button @click="saveProduct" class="btn">Salva</button>
+              </div>
+              <img :src="product.image_url || placeholder" alt="Immagine prodotto" class="max-h-48 object-contain mb-4" />
               <p class="text-sm text-gray-300 mb-2">Barcode: {{ product.barcode }}</p>
 
               <div class="flex gap-4 my-4 text-white">
@@ -69,6 +73,8 @@ const productRating = ref('');
 const alreadyRated = ref(false);
 const selectedRating = computed(() => ratingOptions.find(opt => opt.value === productRating.value));
 const showOverlay = ref(false);
+const productName = ref('');
+const placeholder = '/img/gnuff-placeholder-192.png';
 
 const ratingOptions = [
   { value: 'gnuf', emoji: '😋', label: 'Gnuf' },
@@ -86,7 +92,7 @@ function togglePause() {
 }
 
 async function onResult(result) {
-  if (result.format == 7) {
+  if ((result.format == 7) || (result.format == 14)) {
     scannerPaused.value = true;
     try {
       message.value = null;
@@ -134,6 +140,18 @@ const closeOverlay = () => {
   product.value = null;
   productRating.value = null;
   scannerPaused.value = false;
+};
+
+const saveProduct = async () => {
+  try {
+    const response = await axios.post('/product', {
+      barcode: product.value.barcode,
+      name: productName.value 
+    });
+    product.value = response.data.product;
+  } catch (error) {
+    message.value = "Errore durante il salvataggio del nome.";
+  }
 };
 
 </script>

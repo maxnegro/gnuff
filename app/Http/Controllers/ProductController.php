@@ -25,11 +25,19 @@ class ProductController extends Controller
         
                 $product = Product::create([
                     'barcode' => $barcode,
-                    'name' => $data['product_name'] ?? 'Prodotto sconosciuto',
+                    'name' => $data['product_name'] ?? null,
                     'image_url' => $data['image_front_url'] ?? null,
                 ]);
             } else {
-                return response()->json(['error' => 'Prodotto non trovato'], 404);
+                return response()->json(['error' => 'Errore nel collegamento a OpenFoodFacts'], 404);
+                // return response()->json([
+                //     'product' => [
+                //         'barcode' => $barcode,
+                //         'name' => null,
+                //         'image_url' => null,
+                //     ],
+                //     'rating' => null,
+                // ]);
             }
         }
 
@@ -43,4 +51,22 @@ class ProductController extends Controller
             'rating' => $existingRating?->rating,
         ]);
     }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'barcode' => 'required',
+            'name' => 'required|string|max:255',
+        ]);
+
+        $product = Product::updateOrCreate(
+            [ 'barcode' => $request->barcode ],
+            [ 'name' => $request->name, 'image_url' => null ]
+        );
+
+        return response()->json([
+            'product' => $product,
+        ]);
+    }
+
 }

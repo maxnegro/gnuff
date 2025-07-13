@@ -17,6 +17,8 @@ const emojiMap = {
   bleah: '🤮',
 }
 
+const placeholder = '/img/gnuff-placeholder-192.png';
+
 async function fetchRatings() {
   try {
     const response = await axios.get('/user/ratings')
@@ -51,25 +53,16 @@ onMounted(() => {
         <main class="mt-6">
           <div class="grid items-center">
             <div
-              class="flex items-start gap-4 rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800">
-
-
+              class="flex items-start gap-4 rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800 text-gray-600">
               <section v-if="ratings.length" class="" style="width: 100%;">
                 <h2 class="text-xl font-semibold mb-4">Le tue valutazioni recenti</h2>
                 <ul class="space-y-2">
-                  <li v-for="rating in ratings" :key="rating.id" class="border p-3 rounded">
-                    <div class="flex justify-between items-center">
-                      <div>
-                        <strong>{{ rating.product.name }}</strong>
-                        <div class="text-sm text-gray-600">Barcode: {{ rating.product.barcode }}</div>
-                        <div class="text-xs text-gray-500 mt-1">
-                          Valutato il {{ new Date(rating.updated_at).toLocaleString() }}
-                        </div>
-                      </div>
-                      <div class="text-2xl">
-                        {{ emojiMap[rating.rating] || '❓' }}
-                        {{ rating.rating }}
-                      </div>
+                  <li v-for="rating in ratings" :key="rating.id" class="bg-white p-4 mb-2 rounded shadow flex items-center">
+                    <img :src="rating.product.image_url || placeholder" alt="Immagine prodotto" class="w-16 h-16 object-cover rounded mr-4" />
+                    <div>
+                      <h2 class="text-lg font-semibold">{{ rating.product.name }}</h2>
+                      <p class="text-2xl">{{ emojiMap[rating.rating] }} ({{ rating.rating }})</p>
+                      <p class="text-xs">Valutato il {{ new Date(rating.updated_at).toLocaleString() }}</p>
                     </div>
                   </li>
                 </ul>
@@ -78,8 +71,6 @@ onMounted(() => {
               <p v-else class="text-gray-500">
                 Non hai ancora fatto nessuna valutazione.
               </p>
-
-
 
             </div>
           </div>
