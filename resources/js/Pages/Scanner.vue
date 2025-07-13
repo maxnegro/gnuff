@@ -1,53 +1,54 @@
 <template>
-  <div>
-  <!-- Overlay prodotto -->
-  <div
-    v-if="showOverlay"
-    class="absolute inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center p-6 z-50"
-  >
-    <div class="flex flex-col items-center justify-center" v-if="message"><p class="text-gray-300">{{ message }}</p></div>
-    <h2 class="text-2xl font-bold mb-2 text-white">{{ product.name }}</h2>
-    <img :src="product.image_url" alt="" class="max-h-48 object-contain mb-4" v-if="product.image_url" />
-    <p class="text-sm text-gray-300 mb-2">Barcode: {{ product.barcode }}</p>
+  <div class="bg-gray-50 text-black/50 dark:bg-black dark:text-white/50">
+    <div
+      class="relative flex min-h-screen flex-col items-center justify-top selection:bg-[#FF2D20] selection:text-white">
+      <div class="relative w-full max-w-2xl px-6 lg:max-w-7xl">
+        <header class="grid items-center">
+          <div class="flex justify-center">
+            <!-- Overlay prodotto -->
+            <div v-if="showOverlay"
+              class="absolute inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center p-6 z-50">
+              <div class="flex flex-col items-center justify-center" v-if="message">
+                <p class="text-gray-300">{{ message }}</p>
+              </div>
+              <h2 class="text-2xl font-bold mb-2 text-white">{{ product.name }}</h2>
+              <img :src="product.image_url" alt="" class="max-h-48 object-contain mb-4" v-if="product.image_url" />
+              <p class="text-sm text-gray-300 mb-2">Barcode: {{ product.barcode }}</p>
 
-    <div class="flex gap-4 my-4">
-      <button
-        v-for="opt in ratingOptions"
-        :key="opt.value"
-        :class="[
-          'text-4xl transition transform hover:scale-110',
-          productRating === opt.value ? 'opacity-100' : 'opacity-50'
-        ]"
-        @click="submitRating(opt.value)"
-      >
-        {{ opt.emoji }}
-      </button>
+              <div class="flex gap-4 my-4 text-white">
+                <button v-for="opt in ratingOptions" :key="opt.value" :class="[
+                  'text-4xl transition transform hover:scale-110',
+                  productRating === opt.value ? 'opacity-100' : 'opacity-50'
+                ]" @click="submitRating(opt.value)">
+                  {{ opt.emoji }}
+                </button>
+              </div>
+
+              <button @click="closeOverlay"
+                class="mt-6 bg-white text-black px-4 py-2 rounded-full hover:bg-gray-200 transition">
+                Chiudi
+              </button>
+            </div>
+            <!-- Fine Overlay prodotto -->
+
+            <div class="p-6 space-y-4" style="min-height: 93vh;">
+              <h1 class="text-xl font-bold">Scanner prodotto</h1>
+
+              <StreamBarcodeReader :no-front-camera @result="onResult" @error="onError" :paused="scannerPaused"
+                :torch="torchEnabled" />
+
+              <div class="flex items-center gap-4">
+                <button @click="toggleTorch" class="btn">🔦 Torcia</button>
+                <button @click="togglePause" class="btn">
+                  {{ scannerPaused ? '▶️ Riprendi' : '⏸️ Pausa' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+      </div>
     </div>
-
-    <button
-      @click="closeOverlay"
-      class="mt-6 bg-white text-black px-4 py-2 rounded-full hover:bg-gray-200 transition"
-    >
-      Chiudi
-    </button>
   </div>
-  <!-- Fine Overlay prodotto -->
-
-
-  <div class="p-6 space-y-4">
-    <h1 class="text-xl font-bold">Scanner prodotto</h1>
-
-    <StreamBarcodeReader :no-front-camera @result="onResult" @error="onError" :paused="scannerPaused"
-      :torch="torchEnabled" />
-
-    <div class="flex items-center gap-4">
-      <button @click="toggleTorch" class="btn">🔦 Torcia</button>
-      <button @click="togglePause" class="btn">
-        {{ scannerPaused ? '▶️ Riprendi' : '⏸️ Pausa' }}
-      </button>
-    </div>
-  </div>
-</div>
 </template>
 
 <script setup>
@@ -85,7 +86,7 @@ function togglePause() {
 }
 
 async function onResult(result) {
-  if (result.format == 7 ) {
+  if (result.format == 7) {
     scannerPaused.value = true;
     try {
       message.value = null;
@@ -115,7 +116,7 @@ async function submitRating(value) {
   if (!product.value) return;
   const old = productRating.value;
   productRating.value = value;
-  
+
   try {
     const response = await axios.post('/rate', {
       barcode: product.value.barcode,
@@ -145,4 +146,3 @@ const closeOverlay = () => {
   font-weight: bold;
 }
 </style>
-
