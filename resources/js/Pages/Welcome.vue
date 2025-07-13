@@ -38,7 +38,7 @@ function handleImageError() {
                     class="grid grid-cols-2 items-center gap-2 py-10 lg:grid-cols-3"
                 >
                     <div class="flex lg:col-start-2 lg:justify-center">
-                        <img src="/icons/icon-192.png" height="100">
+                        <img src="/img/icon-192.png" height="100">
                     </div>
                     <nav v-if="canLogin" class="-mx-3 flex flex-1 justify-end">
                         <Link

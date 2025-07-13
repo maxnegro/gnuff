@@ -12,7 +12,7 @@
         <meta name="theme-color" content="#10b981" />
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-        <link rel="apple-touch-icon" href="/icons/icon-512.png" />
+        <link rel="apple-touch-icon" href="/img/icon-512.png" />
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

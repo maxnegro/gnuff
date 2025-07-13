@@ -40,45 +40,45 @@ onMounted(() => {
         <header class="grid grid-cols-2 items-center gap-2 py-10 lg:grid-cols-3">
           <div class="flex lg:col-start-2 lg:justify-center">
             <p>
-            <img src="/icons/icon-192.png">
-            
-      <Link href="/scanner" class="text-indigo-600 hover:underline text-lg">
-      👉 Vai allo scanner
-      </Link>
-    </p>
+              <img src="/img/icon-192.png">
+
+              <Link href="/scanner" class="text-indigo-600 hover:underline text-lg">
+              👉 Vai allo scanner
+              </Link>
+            </p>
           </div>
         </header>
         <main class="mt-6">
           <div class="grid items-center">
             <div
               class="flex items-start gap-4 rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800">
-              
 
-    <section v-if="ratings.length" class="" style="width: 100%;">
-      <h2 class="text-xl font-semibold mb-4">Le tue valutazioni recenti</h2>
-      <ul class="space-y-2">
-        <li v-for="rating in ratings" :key="rating.id" class="border p-3 rounded">
-          <div class="flex justify-between items-center">
-            <div>
-              <strong>{{ rating.product.name }}</strong>
-              <div class="text-sm text-gray-600">Barcode: {{ rating.product.barcode }}</div>
-              <div class="text-xs text-gray-500 mt-1">
-                Valutato il {{ new Date(rating.updated_at).toLocaleString() }}
-              </div>
-            </div>
-            <div class="text-2xl">
-              {{ emojiMap[rating.rating] || '❓' }}
-              {{ rating.rating }}
-            </div>
-          </div>
-        </li>
-      </ul>
-    </section>
 
-    <p v-else class="text-gray-500">
-      Non hai ancora fatto nessuna valutazione.
-    </p>
-              
+              <section v-if="ratings.length" class="" style="width: 100%;">
+                <h2 class="text-xl font-semibold mb-4">Le tue valutazioni recenti</h2>
+                <ul class="space-y-2">
+                  <li v-for="rating in ratings" :key="rating.id" class="border p-3 rounded">
+                    <div class="flex justify-between items-center">
+                      <div>
+                        <strong>{{ rating.product.name }}</strong>
+                        <div class="text-sm text-gray-600">Barcode: {{ rating.product.barcode }}</div>
+                        <div class="text-xs text-gray-500 mt-1">
+                          Valutato il {{ new Date(rating.updated_at).toLocaleString() }}
+                        </div>
+                      </div>
+                      <div class="text-2xl">
+                        {{ emojiMap[rating.rating] || '❓' }}
+                        {{ rating.rating }}
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </section>
+
+              <p v-else class="text-gray-500">
+                Non hai ancora fatto nessuna valutazione.
+              </p>
+
 
 
             </div>
@@ -90,6 +90,5 @@ onMounted(() => {
     </div>
   </div>
 
-  
+
 </template>
-  

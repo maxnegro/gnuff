@@ -1,3 +1,3 @@
 <template>
-    <img src="/icons/icon-192.png" height="100">
+    <img src="/img/icon-192.png" height="100">
 </template>
