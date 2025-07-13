@@ -29,15 +29,15 @@ class ProductController extends Controller
                     'image_url' => $data['image_front_url'] ?? null,
                 ]);
             } else {
-                return response()->json(['error' => 'Errore nel collegamento a OpenFoodFacts'], 404);
-                // return response()->json([
-                //     'product' => [
-                //         'barcode' => $barcode,
-                //         'name' => null,
-                //         'image_url' => null,
-                //     ],
-                //     'rating' => null,
-                // ]);
+                // return response()->json(['error' => 'Errore nel collegamento a OpenFoodFacts'], 404);
+                return response()->json([
+                    'product' => [
+                        'barcode' => $barcode,
+                        'name' => null,
+                        'image_url' => null,
+                    ],
+                    'rating' => null,
+                ]);
             }
         }
 
