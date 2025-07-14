@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use Illuminate\Support\Facades\Http;
+use Inertia\Inertia;
 
 class ProductController extends Controller
 {
@@ -68,5 +69,32 @@ class ProductController extends Controller
             'product' => $product,
         ]);
     }
+
+    public function edit(Product $product)
+    {
+        return Inertia::render('Product/Edit', [
+            'product' => $product,
+        ]);
+    }
+
+    public function update(Request $request, Product $product)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'image' => 'nullable|url',
+        ]);
+
+        $product->update($request->only(['name', 'image']));
+
+        return redirect()->route('dashboard')->with('success', 'Prodotto aggiornato');
+    }
+
+    public function destroy(Product $product)
+    {
+        $product->delete();
+
+        return redirect()->route('dashboard')->with('success', 'Prodotto eliminato');
+    }
+
 
 }

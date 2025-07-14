@@ -56,14 +56,21 @@ onMounted(() => {
               class="flex items-start gap-4 rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800 text-gray-600">
               <section v-if="ratings.length" class="" style="width: 100%;">
                 <h2 class="text-xl font-semibold mb-4">Le tue valutazioni recenti</h2>
-                <ul class="space-y-2">
-                  <li v-for="rating in ratings" :key="rating.id" class="bg-white p-4 mb-2 rounded shadow flex items-center">
-                    <img :src="rating.product.image_url || placeholder" alt="Immagine prodotto" class="w-16 h-16 object-cover rounded mr-4" />
-                    <div>
-                      <h2 class="text-lg font-semibold">{{ rating.product.name }}</h2>
-                      <p class="text-2xl">{{ emojiMap[rating.rating] }} ({{ rating.rating }})</p>
-                      <p class="text-xs">Valutato il {{ new Date(rating.updated_at).toLocaleString() }}</p>
+                <ul class="space-y-2 w-full">
+                  <li v-for="rating in ratings" :key="rating.id" class="bg-white p-4 mb-2 rounded shadow w-full">
+                    <Link
+                      :href="route('product.edit', rating.product.id)"
+                      class="block p-4 hover:bg-gray-100 transition w-full"
+                    >
+                    <div class="flex items-center w-full">
+                      <img :src="rating.product.image_url || placeholder" alt="Immagine prodotto" class="min-w-16 min-h-16 w-16 h-16 object-cover rounded mr-4" />
+                      <div>
+                        <h2 class="text-lg font-semibold">{{ rating.product.name }}</h2>
+                        <p class="text-2xl">{{ emojiMap[rating.rating] }} ({{ rating.rating }})</p>
+                        <p class="text-xs">Valutato il {{ new Date(rating.updated_at).toLocaleString() }}</p>
+                      </div>
                     </div>
+                  </Link>
                   </li>
                 </ul>
               </section>
