@@ -1,10 +1,10 @@
 # gnuff - Database di Prodotti Alimentari con Valutazioni Utente
 
 ## Descrizione del Progetto
-gnuff è un'applicazione Laravel 12 che permette di mantenere un database di prodotti alimentari, assegnando a ciascuno un gradimento basato sull'esperienza personale dell'utente. Questo sistema consente di valutare l'acquisto di prodotti quando si trova al supermercato, grazie a un'interfaccia intuitiva e a un database ben organizzato.
+gnuff è un'applicazione Laravel 13 che permette di mantenere un database di prodotti alimentari, assegnando a ciascuno un gradimento basato sull'esperienza personale dell'utente. Questo sistema consente di valutare l'acquisto di prodotti quando si trova al supermercato, grazie a un'interfaccia intuitiva e a un database ben organizzato.
 
 ## Tecnologie Utilizzate
-- **Backend:** Laravel 12 (PHP 8.2+), Laravel Sanctum (API autenticazione), Inertia.js (frontend)
+- **Backend:** Laravel 13 (PHP 8.3+), Laravel Sanctum (API autenticazione), Inertia.js (frontend)
 - **Frontend:** Inertia.js + Ziggy (helper per route), Tailwind CSS
 - **Sviluppo:** Docker (Sail), Vite, npm
 - **Database:** SQLite (di default), supporto per MySQL/PostgreSQL
@@ -19,8 +19,8 @@ gnuff è un'applicazione Laravel 12 che permette di mantenere un database di pro
 
 ## Script Utili
 - `composer run dev`: Avvia ambiente di sviluppo completo (server, queue, log, Vite).
-- `php artisan serve`: Avvia il server di sviluppo.
-- `npm run dev`: Avvia Vite in modalità di sviluppo.
+- `./vendor/bin/sail artisan migrate`: Esegue le migrazioni per l'ambiente virtuale.
+- `./vendor/bin/sail npm run build`: Compila le viste Vue.
 
 ## Database
 - File SQLite preconfigurato (`database/database.sqlite`).
