@@ -1,0 +1,50 @@
+# Cline recommendations for this project
+
+## Core standards
+- Keep all generated code production-ready and strongly typed where applicable.
+- Prefer small focused files and functions over large mixed-responsibility modules.
+- Match existing project conventions before introducing new patterns.
+- Include meaningful tests for business-critical behavior.
+- Never ship placeholder TODO logic in production paths.
+
+## Security conventions
+- Use explicit naming for modules, services, and handlers.
+- Add boundary validation for external inputs and API payloads.
+- Keep side effects isolated and observable with logs/metrics.
+- Favor predictable dependency boundaries and clear ownership.
+- Document trade-offs for non-obvious implementation choices.
+
+## Laravel guidance
+- Follow canonical Laravel project layout and idioms.
+- Optimize for readability first, then measure before optimization.
+- Keep configuration centralized and environment-safe.
+- Ensure lint/type/test checks pass before merging.
+- For php, avoid hidden magic and implicit behavior.
+
+## Testing checklist
+- Unit tests for pure logic and edge cases.
+- Integration tests for external dependencies.
+- Regression tests for bug fixes.
+- Deterministic test data and stable assertions.
+
+## Security & reliability checklist
+- Validate and sanitize all user-controlled inputs.
+- Avoid leaking secrets in logs or error responses.
+- Fail safely with clear, actionable error messages.
+- Add retries/timeouts only where idempotency is guaranteed.
+
+## AI generation behavior
+- Generate minimal diffs rather than full rewrites.
+- Explain risky changes before applying them.
+
+## Always use ./vendor/bin/sail
+
+To ensure consistent environment and avoid host-level command issues, please always execute Laravel, npm, and Docker Compose commands through the project's Sail wrapper:
+
+- Laravel Artisan: `./vendor/bin/sail artisan <command>`
+- npm scripts: `./vendor/bin/sail npm <command>`
+- Docker Compose: `./vendor/bin/sail compose <command>`
+
+This wrapper handles dependencies, versioning, and environment setup automatically.
+
+If you need to run a command not covered above, use the appropriate subcommand or fall back to the wrapper with the `*` case.
