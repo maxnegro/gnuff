@@ -17,9 +17,9 @@ class ProductFactory extends Factory
     public function definition(): array
     {
         return [
-            'barcode' => $this->faker->unique()->ean13(),
-            'name' => $this->faker->word(),
-            'image_url' => $this->faker->imageUrl(),
+            'barcode' => fake()->unique()->ean13(),
+            'name' => fake()->word(),
+            'image_url' => fake()->imageUrl(),
         ];
     }
 }
