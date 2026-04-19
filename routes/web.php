@@ -23,6 +23,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/scanner', fn() => Inertia::render('Scanner'))->name('scanner');
 
     // Product routes
+    Route::get('/products', fn() => Inertia::render('Product/List'))->name('product.list');
     Route::get('/product/{barcode}', [ProductController::class, 'show'])->name('product.show');
     Route::put('/product/{product}', [ProductController::class, 'update'])->name('product.update');
     Route::delete('/product/{product}', [ProductController::class, 'destroy'])->name('product.destroy');

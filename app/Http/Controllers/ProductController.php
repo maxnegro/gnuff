@@ -8,6 +8,15 @@ use Inertia\Inertia;
 
 class ProductController extends Controller
 {
+    /**
+     * Restituisce tutti i prodotti (API per lista)
+     */
+    public function apiIndex(Request $request)
+    {
+        $perPage = $request->input('per_page', 100);
+        $products = Product::orderBy('name')->paginate($perPage);
+        return response()->json($products);
+    }
     public function show($barcode)
     {
         // Memorizza utente corrente
