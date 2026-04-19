@@ -13,6 +13,16 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            if (!$model->validate()) {
+                throw new ValidationException($model->validator);
+            }
+        });
+    }
+
     /**
      * Validator instance for validation errors.
      * @var \Illuminate\Contracts\Validation\Validator|null
@@ -69,7 +79,8 @@ class User extends Authenticatable
 
     public function save(array $options = [])
     {
-        if (!$this->validate()) {
+        // Valida solo in creazione
+        if (!$this->exists && !$this->validate()) {
             throw new ValidationException($this->validator);
         }
         // Rimuovi la proprietà validator prima del salvataggio

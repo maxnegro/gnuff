@@ -19,7 +19,7 @@
                 {{ sort.direction === 'asc' ? '▲' : '▼' }}
               </span>
             </th>
-            <th class="py-2 px-2 text-left cursor-pointer select-none hover:bg-blue-100" colspan="2"
+            <th class="py-2 px-2 text-left cursor-pointer select-none hover:bg-blue-100"
                 @click="sortBy('rating')">
               Val
               <span v-if="sort.field === 'rating'">
@@ -38,14 +38,10 @@
             <td class="py-2 px-2">
               <select v-model="ratings[product.id]" class="select select-xs" @change="rateProduct(product)">
                 <option value="">-</option>
-                <option v-for="val in ratingOptions" :key="val" :value="val">{{ val }}</option>
+                <option v-for="val in ratingOptions" :key="val" :value="val">
+                  {{ ratingEmojis[val] || '' }} {{ val.charAt(0).toUpperCase() + val.slice(1) }}
+                </option>
               </select>
-            </td>
-            <td class="py-2 px-2 text-xl">
-              <span v-if="ratings[product.id]">
-                {{ ratingEmojis[ratings[product.id]] || '' }}
-              </span>
-              <span v-else>-</span>
             </td>
           </tr>
         </tbody>
@@ -56,7 +52,7 @@
 </template>
 
 <script setup>
-const ratingEmojis = { gnuf: '😋', ok: '🙂', meh: '😐', bleah: '🤢' };
+const ratingEmojis = { gnuf: '😋', ok: '😊', meh: '😐', bleah: '🤮' };
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 defineOptions({ layout: AuthenticatedLayout });
 import { ref, computed, onMounted } from 'vue';

@@ -59,4 +59,14 @@ class Rating extends Model
         }
         return true;
     }
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            if (!$model->validate()) {
+                throw new \Illuminate\Validation\ValidationException($model->validator);
+            }
+        });
+    }
 }

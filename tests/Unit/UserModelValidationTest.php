@@ -23,8 +23,13 @@ class UserModelValidationTest extends TestCase
 
     public function test_password_must_be_present(): void
     {
-        // Attempt to create a user without a password
+        // Attempt to create a user with password vuota
         $user = User::factory()->make(['password' => '']);
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        $user->save();
+
+        // Attempt to create a user with password null
+        $user = User::factory()->make(['password' => null]);
         $this->expectException(\Illuminate\Validation\ValidationException::class);
         $user->save();
     }
