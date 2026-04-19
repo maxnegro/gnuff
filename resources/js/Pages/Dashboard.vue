@@ -11,11 +11,25 @@ const showManualForm = ref(false)
 const manualStep = ref('ean')
 const manualForm = ref({ barcode: '', name: '', image_url: '', rating: '' })
 
-function openEditModal(rating) {
+async function openEditModal(rating) {
+  // Se manca l'immagine o è il placeholder, prova a recuperare da OpenFoodFacts
+  let name = rating.product.name || ''
+  let image_url = rating.product.image_url || ''
+  if (!image_url || image_url === placeholder) {
+    try {
+      const res = await axios.get(`/product/${rating.product.barcode}`)
+      if (res.data && res.data.product) {
+        name = res.data.product.name || name
+        image_url = res.data.product.image_url || image_url
+      }
+    } catch (e) {
+      // fallback: lascia i dati originali
+    }
+  }
   manualForm.value = {
     barcode: rating.product.barcode,
-    name: rating.product.name || '',
-    image_url: rating.product.image_url || '',
+    name,
+    image_url,
     rating: rating.rating || '',
   }
   manualStep.value = 'dati'
