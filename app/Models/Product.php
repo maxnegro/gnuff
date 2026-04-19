@@ -22,7 +22,7 @@ class Product extends Model
         return [
             'barcode' => 'required|string',
             'name' => 'required|string',
-            'image_url' => 'required|url',
+            'image_url' => 'nullable|url',
         ];
     }
 

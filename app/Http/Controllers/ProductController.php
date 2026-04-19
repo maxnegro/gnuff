@@ -25,29 +25,36 @@ class ProductController extends Controller
         // Cerca prodotto nel DB
         $product = Product::where('barcode', $barcode)->first();
 
-        // Se non esiste, tenta di recuperarlo da Open Food Facts (solo v2)
-        if (!$product) {
-            $response = Http::get("https://world.openfoodfacts.org/api/v2/product/{$barcode}.json");
-            $data = null;
-            if ($response->successful() && isset($response['product']) && !empty($response['product'])) {
-                $data = $response['product'];
-            }
-            if ($data) {
-                $product = Product::create([
-                    'barcode' => $barcode,
-                    'name' => $data['product_name'] ?? null,
-                    'image_url' => $data['image_front_url'] ?? null,
-                ]);
+        // Recupera sempre dati freschi da OpenFoodFacts e aggiorna se diversi
+        $response = Http::get("https://world.openfoodfacts.org/api/v2/product/{$barcode}.json");
+        $data = null;
+        if ($response->successful() && isset($response['product']) && !empty($response['product'])) {
+            $data = $response['product'];
+        }
+        if ($data) {
+            $fields = [
+                'barcode' => $barcode,
+                'name' => $data['product_name'] ?? $product?->name,
+                'image_url' => $data['image_front_url'] ?? $product?->image_url,
+            ];
+            if ($product) {
+                // Aggiorna solo se i dati sono diversi
+                if ($product->name !== $fields['name'] || $product->image_url !== $fields['image_url']) {
+                    $product->update($fields);
+                }
             } else {
-                return response()->json([
-                    'product' => [
-                        'barcode' => $barcode,
-                        'name' => null,
-                        'image_url' => null,
-                    ],
-                    'rating' => null,
-                ]);
+                $product = Product::create($fields);
             }
+        } elseif (!$product) {
+            // Non trovato né su DB né su OpenFoodFacts
+            return response()->json([
+                'product' => [
+                    'barcode' => $barcode,
+                    'name' => null,
+                    'image_url' => null,
+                ],
+                'rating' => null,
+            ]);
         }
 
         // Verifica se l’utente ha già inserito un rating
@@ -68,9 +75,14 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
         ]);
 
+
+        $fields = [ 'name' => $request->name ];
+        if ($request->filled('image_url')) {
+            $fields['image_url'] = $request->image_url;
+        }
         $product = Product::updateOrCreate(
             [ 'barcode' => $request->barcode ],
-            [ 'name' => $request->name, 'image_url' => null ]
+            $fields
         );
 
         return response()->json([

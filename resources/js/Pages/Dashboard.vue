@@ -13,9 +13,33 @@ const manualForm = ref({
   image_url: '',
   rating: '',
 })
+
 const manualFormError = ref('')
 const manualFormLoading = ref(false)
 const manualProductFound = ref(false)
+
+// Stato per cambio immagine
+const showImageInput = ref(false)
+const newImageUrl = ref('')
+
+async function updateImageUrl() {
+  manualFormError.value = ''
+  manualFormLoading.value = true
+  try {
+    // PATCH/PUT su /product/{barcode} (usiamo PUT per coerenza REST)
+    await axios.put(`/product/${manualForm.value.barcode}`, {
+      name: manualForm.value.name,
+      image: newImageUrl.value,
+    })
+    manualForm.value.image_url = newImageUrl.value
+    showImageInput.value = false
+    newImageUrl.value = ''
+  } catch (e) {
+    manualFormError.value = 'Errore durante l\'aggiornamento immagine.'
+  } finally {
+    manualFormLoading.value = false
+  }
+}
 
 const ratingOptions = [
   { value: 'gnuf', label: '😋 Gnuf' },
@@ -33,6 +57,7 @@ async function cercaEAN() {
     if (res.data && res.data.product) {
       manualForm.value.name = res.data.product.name || ''
       manualForm.value.image_url = res.data.product.image_url || ''
+      manualForm.value.rating = res.data.rating || ''
       manualProductFound.value = true
       manualStep.value = 'dati'
     } else {
@@ -101,6 +126,20 @@ onMounted(() => {
   fetchRatings()
 })
 
+// Funzione per aprire la modale in modalità modifica da valutazione recente
+function openEditModal(rating) {
+  manualForm.value = {
+    barcode: rating.product.barcode,
+    name: rating.product.name || '',
+    image_url: rating.product.image_url || '',
+    rating: rating.rating || '',
+  }
+  manualStep.value = 'dati'
+  showManualForm.value = true
+  showImageInput.value = false
+  newImageUrl.value = ''
+}
+
 </script>
 
 <template>
@@ -109,14 +148,24 @@ onMounted(() => {
       class="relative flex min-h-screen flex-col items-center justify-center selection:bg-[#FF2D20] selection:text-white">
       <div class="relative w-full max-w-2xl px-6 lg:max-w-7xl">
         <header class="grid grid-cols-2 items-center gap-2 py-10 lg:grid-cols-3">
-          <div class="flex lg:col-start-2 lg:justify-center items-center gap-4">
-            <img src="/img/icon-192.png">
-            <button @click="showManualForm = true; manualStep = 'ean'; manualForm = { barcode: '', name: '', image_url: '', rating: '' }" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-              ➕ Aggiungi prodotto manualmente
-            </button>
-            <button @click="$inertia.visit('/scanner')" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-              📷 Vai allo scanner
-            </button>
+          <div class="flex lg:justify-center items-center gap-4 w-full">
+            <img src="/img/icon-192.png" class="flex-shrink-0" />
+          </div>
+          <div class="flex lg:justify-center items-center gap-4 w-full">
+            <div class="flex flex-col gap-2 w-full ml-auto">
+              <button
+                @click="$inertia.visit('/scanner')"
+                class="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              >
+                📷 Scan
+              </button>
+              <button
+                @click="showManualForm = true; manualStep = 'ean'; manualForm = { barcode: '', name: '', image_url: '', rating: '' }"
+                class="w-full px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+              >
+                ➕ EAN
+              </button>
+            </div>
           </div>
         </header>
         <main class="mt-6">
@@ -136,10 +185,20 @@ onMounted(() => {
                           </form>
                           <div v-else-if="manualStep === 'dati'" class="flex flex-col gap-3">
                             <div class="flex items-center gap-3 mb-2">
-                              <img :src="manualForm.image_url || placeholder" alt="Immagine prodotto" class="w-16 h-16 object-cover rounded" />
+                              <div class="flex flex-col items-center">
+                                <img :src="manualForm.image_url || placeholder" alt="Immagine prodotto" class="w-16 h-16 object-cover rounded cursor-pointer border-2 border-transparent hover:border-indigo-400" @click="showImageInput = true; newImageUrl = manualForm.image_url || ''" />
+                                <button type="button" @click="showImageInput = true; newImageUrl = manualForm.image_url || ''" class="mt-1 w-16 bg-white text-xs px-2 py-1 rounded shadow border border-gray-200 opacity-90 hover:opacity-100 text-center">Cambia</button>
+                              </div>
                               <div>
                                 <div class="font-bold">{{ manualForm.name || 'Nome non disponibile' }}</div>
                                 <div class="text-xs text-gray-500">EAN: {{ manualForm.barcode }}</div>
+                              </div>
+                            </div>
+                            <div v-if="showImageInput" class="flex flex-col gap-2 mb-2">
+                              <input v-model="newImageUrl" type="url" placeholder="Nuovo URL immagine" class="border rounded px-3 py-2" />
+                              <div class="flex gap-2">
+                                <button @click="updateImageUrl" type="button" class="bg-indigo-600 text-white rounded px-3 py-1 hover:bg-indigo-700">Salva immagine</button>
+                                <button @click="showImageInput = false" type="button" class="bg-gray-300 rounded px-3 py-1 hover:bg-gray-400">Annulla</button>
                               </div>
                             </div>
                             <form @submit.prevent="submitManualForm" class="flex flex-col gap-3">
@@ -171,31 +230,27 @@ onMounted(() => {
                         </div>
                       </div>
 
-                      <section v-if="ratings.length" style="width: 100%;">
-                        <h2 class="text-xl font-semibold mb-4">Le tue valutazioni recenti</h2>
-                        <ul class="space-y-2 w-full">
-                          <li v-for="rating in ratings" :key="rating.id" class="bg-white p-4 mb-2 rounded shadow w-full">
-                    <Link
-                      :href="route('product.edit', rating.product.id)"
-                      class="block p-4 hover:bg-gray-100 transition w-full"
-                    >
-                    <div class="flex items-center w-full">
-                      <img :src="rating.product.image_url || placeholder" alt="Immagine prodotto" class="min-w-16 min-h-16 w-16 h-16 object-cover rounded mr-4" />
-                      <div>
-                        <h2 class="text-lg font-semibold">{{ rating.product.name }}</h2>
-                        <p class="text-2xl">{{ emojiMap[rating.rating] }} ({{ rating.rating }})</p>
-                        <p class="text-xs">Valutato il {{ new Date(rating.updated_at).toLocaleString() }}</p>
-                      </div>
-                    </div>
-                  </Link>
-                  </li>
-                </ul>
-              </section>
-
-              <p v-else class="text-gray-500">
-                Non hai ancora fatto nessuna valutazione.
-              </p>
-
+                      <template v-if="ratings.length">
+                        <section style="width: 100%;">
+                          <h2 class="text-xl font-semibold mb-4">Le tue valutazioni recenti</h2>
+                          <ul class="space-y-2 w-full">
+                            <li v-for="rating in ratings" :key="rating.id" class="bg-white p-4 mb-2 rounded shadow w-full cursor-pointer hover:bg-gray-100 transition"
+                                @click="openEditModal(rating)">
+                              <div class="flex items-center w-full">
+                                <img :src="rating.product.image_url || placeholder" alt="Immagine prodotto" class="min-w-16 min-h-16 w-16 h-16 object-cover rounded mr-4" />
+                                <div>
+                                  <h2 class="text-lg font-semibold">{{ rating.product.name }}</h2>
+                                  <p class="text-2xl">{{ emojiMap[rating.rating] }} ({{ rating.rating }})</p>
+                                  <p class="text-xs">Valutato il {{ new Date(rating.updated_at).toLocaleString() }}</p>
+                                </div>
+                              </div>
+                            </li>
+                          </ul>
+                        </section>
+                      </template>
+                      <p v-else class="text-gray-500">
+                        Non hai ancora fatto nessuna valutazione.
+                      </p>
             </div>
           </div>
         </main>
