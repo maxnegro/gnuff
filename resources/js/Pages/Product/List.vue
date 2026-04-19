@@ -19,7 +19,13 @@
                 {{ sort.direction === 'asc' ? '▲' : '▼' }}
               </span>
             </th>
-            <th class="py-2 px-2">Valutazione</th>
+            <th class="py-2 px-2 text-left cursor-pointer select-none hover:bg-blue-100" colspan="2"
+                @click="sortBy('rating')">
+              Val
+              <span v-if="sort.field === 'rating'">
+                {{ sort.direction === 'asc' ? '▲' : '▼' }}
+              </span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -35,6 +41,12 @@
                 <option v-for="val in ratingOptions" :key="val" :value="val">{{ val }}</option>
               </select>
             </td>
+            <td class="py-2 px-2 text-xl">
+              <span v-if="ratings[product.id]">
+                {{ ratingEmojis[ratings[product.id]] || '' }}
+              </span>
+              <span v-else>-</span>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -44,6 +56,7 @@
 </template>
 
 <script setup>
+const ratingEmojis = { gnuf: '😋', ok: '🙂', meh: '😐', bleah: '🤢' };
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 defineOptions({ layout: AuthenticatedLayout });
 import { ref, computed, onMounted } from 'vue';
@@ -85,8 +98,9 @@ const filteredProducts = computed(() => {
   if (sort.value.field) {
     list = [...list].sort((a, b) => {
       if (sort.value.field === 'rating') {
-        const ra = ratings.value[a.id] || '';
-        const rb = ratings.value[b.id] || '';
+        const order = { gnuf: 4, ok: 3, meh: 2, bleah: 1, '': 0, null: 0, undefined: 0 };
+        const ra = order[ratings.value[a.id]] ?? 0;
+        const rb = order[ratings.value[b.id]] ?? 0;
         if (ra < rb) return sort.value.direction === 'asc' ? -1 : 1;
         if (ra > rb) return sort.value.direction === 'asc' ? 1 : -1;
         return 0;
@@ -131,10 +145,29 @@ onMounted(fetchProducts);
 </script>
 
 <style scoped>
-.input, .select {
+/* Migliora aspetto input e select */
+.input {
   border: 1px solid #d1d5db;
   border-radius: 0.375rem;
   padding: 0.5rem;
+}
+.select {
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  padding: 0.25rem 1.5rem 0.25rem 0.5rem;
+  min-width: 80px;
+  font-size: 1rem;
+  font-family: inherit;
+  background-color: #fff;
+  appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg fill="gray" height="16" viewBox="0 0 20 20" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M7.293 7.293a1 1 0 011.414 0L10 8.586l1.293-1.293a1 1 0 111.414 1.414l-2 2a1 1 0 01-1.414 0l-2-2a1 1 0 010-1.414z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1rem;
+}
+/* Fix per select su Safari/iOS */
+select.select::-ms-expand {
+  display: none;
 }
 @media (max-width: 640px) {
   table, thead, tbody, th, td, tr { display: block; }
