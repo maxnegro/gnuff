@@ -7,7 +7,7 @@ use App\Enums\RatingEnum;
 
 class Rating extends Model
 {
-    protected $fillable = ['user_id', 'product_id', 'rating'];
+    protected $fillable = ['product_list_id', 'product_id', 'rating'];
 
     /**
      * Validator instance for validation errors.
@@ -19,10 +19,11 @@ class Rating extends Model
         'rating' => RatingEnum::class,
     ];
 
+
     public function rules()
     {
         return [
-            'user_id' => 'required|integer',
+            'product_list_id' => 'required|integer',
             'product_id' => 'required|integer',
             'rating' => 'required|in:' . implode(',', RatingEnum::values()),
         ];
@@ -33,9 +34,9 @@ class Rating extends Model
         return $this->belongsTo(Product::class);
     }
 
-    public function user()
+    public function productList()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(ProductList::class);
     }
 
     public function save(array $options = [])

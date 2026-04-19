@@ -13,6 +13,16 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    public function ownedProductLists()
+    {
+        return $this->hasMany(ProductList::class, 'owner_id');
+    }
+
+    public function sharedProductLists()
+    {
+        return $this->belongsToMany(ProductList::class, 'product_list_user');
+    }
+
     protected static function boot()
     {
         parent::boot();

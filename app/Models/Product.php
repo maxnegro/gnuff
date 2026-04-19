@@ -26,9 +26,15 @@ class Product extends Model
         ];
     }
 
+
     public function ratings()
     {
         return $this->hasMany(Rating::class);
+    }
+
+    public function productLists()
+    {
+        return $this->belongsToMany(ProductList::class, 'product_list_product');
     }
 
     public function save(array $options = [])
