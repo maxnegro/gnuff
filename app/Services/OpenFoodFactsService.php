@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Http;
 class OpenFoodFactsService
 {
     protected string $userAgent = 'GnuffApp - Web - v1.0 - https://github.com/negrognuff/gnuff - scan';
-    protected string $baseUrl = 'https://world.openfoodfacts.org/api/v2';
+    protected string $baseUrl = 'https://world.openfoodfacts.net/api/v2';
 
     /**
      * Recupera i dati di un prodotto tramite barcode.

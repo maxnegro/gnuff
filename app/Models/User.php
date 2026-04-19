@@ -31,6 +31,13 @@ class User extends Authenticatable
                 throw new ValidationException($model->validator);
             }
         });
+        static::created(function ($user) {
+            // Crea una lista di default per ogni nuovo utente
+            \App\Models\ProductList::create([
+                'name' => 'Lista di default',
+                'owner_id' => $user->id,
+            ]);
+        });
     }
 
     /**
