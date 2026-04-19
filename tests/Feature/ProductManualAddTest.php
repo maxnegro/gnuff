@@ -73,4 +73,20 @@ class ProductManualAddTest extends TestCase
             'barcode' => $barcode,
         ]);
     }
+
+    public function test_openfoodfacts_fields_are_limited()
+    {
+        $user = User::factory()->create();
+        $barcode = '8002885005110'; // barcode reale
+
+        $response = $this->actingAs($user)->getJson("/product/{$barcode}");
+        $response->assertStatus(200);
+        $data = $response->json('product');
+        // I campi devono essere solo questi
+        $this->assertIsArray($data);
+        $this->assertArrayHasKey('barcode', $data);
+        $this->assertArrayHasKey('name', $data);
+        $this->assertArrayHasKey('image_url', $data);
+        $this->assertCount(3, $data, 'Devono essere presenti solo barcode, name, image_url');
+    }
 }

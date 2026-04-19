@@ -4,7 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Product;
-use Faker\Factory as Faker;
+use App\Services\OpenFoodFactsService;
+use Illuminate\Support\Facades\App;
 
 class ProductSeeder extends Seeder
 {
@@ -13,17 +14,21 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
-        // Scarica prodotti reali da Open Food Facts
-        $url = 'https://world.openfoodfacts.net/api/v2/search?allergens_tags=-en:gluten&countries_tags_en=italy&fields=product_name%2Ccode%2Cimages&sort_by=popularity_key&page=24&page_size=49';
-        $response = @file_get_contents($url);
-        if ($response === false) {
+        // Scarica prodotti reali da Open Food Facts tramite service
+        /** @var OpenFoodFactsService $offService */
+        $offService = App::make(OpenFoodFactsService::class);
+        $products = $offService->searchProducts([
+            'allergens_tags' => '-en:gluten',
+            'countries_tags_en' => 'italy',
+            'fields' => 'product_name,code,images',
+            'sort_by' => 'popularity_key',
+            'page' => 24,
+            'page_size' => 49,
+        ]);
+        if (!is_array($products)) {
             throw new \Exception('Impossibile recuperare dati da Open Food Facts');
         }
-        $data = json_decode($response, true);
-        if (!isset($data['products'])) {
-            throw new \Exception('Risposta API non valida');
-        }
-        foreach ($data['products'] as $product) {
+        foreach ($products as $product) {
             $barcode = $product['code'] ?? null;
             $name = $product['product_name'] ?? null;
             // Prende la prima immagine disponibile
