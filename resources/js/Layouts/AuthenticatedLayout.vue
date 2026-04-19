@@ -110,7 +110,9 @@ const showingNavigationDropdown = ref(false);
                         <ResponsiveNavLink :href="route('scanner')" :active="route().current('scanner')">
                             Scanner
                         </ResponsiveNavLink>
-
+                        <ResponsiveNavLink :href="route('product.list')" :active="route().current('product.list')">
+                            Prodotti
+                        </ResponsiveNavLink>
                     </div>
 
                     <!-- Responsive Settings Options -->

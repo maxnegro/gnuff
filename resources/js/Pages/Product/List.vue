@@ -33,7 +33,7 @@
             <td class="py-2 px-2">{{ product.name }}</td>
             <td class="py-2 px-2 font-mono">{{ product.barcode }}</td>
             <td class="py-2 px-2">
-              <img :src="product.image_url" alt="img" class="w-12 h-12 object-cover rounded" />
+              <img :src="product.image_url || placeholder" @error="e => e.target.src = placeholder" alt="img" class="w-12 h-12 object-cover rounded" />
             </td>
             <td class="py-2 px-2">
               <select v-model="ratings[product.id]" class="select select-xs" @change="rateProduct(product)">
@@ -53,6 +53,7 @@
 
 <script setup>
 const ratingEmojis = { gnuf: '😋', ok: '😊', meh: '😐', bleah: '🤮' };
+const placeholder = '/img/gnuff-placeholder-192.png';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 defineOptions({ layout: AuthenticatedLayout });
 import { ref, computed, onMounted } from 'vue';
