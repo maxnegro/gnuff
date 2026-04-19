@@ -13,15 +13,36 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
-        $faker = Faker::create();
-        // EAN-13 validi (compatibili con Open Food Facts)
-        for ($i = 0; $i < 50; $i++) {
-            $barcode = self::generateEan13();
-            Product::create([
-                'barcode' => $barcode,
-                'name' => $faker->words(3, true),
-                'image_url' => $faker->imageUrl(640, 480, 'food', true, 'Prodotto'),
-            ]);
+        // Scarica prodotti reali da Open Food Facts
+        $url = 'https://world.openfoodfacts.net/api/v2/search?allergens_tags=-en:gluten&countries_tags_en=italy&fields=product_name%2Ccode%2Cimages&sort_by=popularity_key&page=24&page_size=49';
+        $response = @file_get_contents($url);
+        if ($response === false) {
+            throw new \Exception('Impossibile recuperare dati da Open Food Facts');
+        }
+        $data = json_decode($response, true);
+        if (!isset($data['products'])) {
+            throw new \Exception('Risposta API non valida');
+        }
+        foreach ($data['products'] as $product) {
+            $barcode = $product['code'] ?? null;
+            $name = $product['product_name'] ?? null;
+            // Prende la prima immagine disponibile
+            $image_url = null;
+            if (isset($product['images']) && is_array($product['images'])) {
+                foreach ($product['images'] as $img) {
+                    if (isset($img['url'])) {
+                        $image_url = $img['url'];
+                        break;
+                    }
+                }
+            }
+            if ($barcode && $name) {
+                Product::create([
+                    'barcode' => $barcode,
+                    'name' => $name,
+                    'image_url' => $image_url,
+                ]);
+            }
         }
     }
 
