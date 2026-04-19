@@ -25,21 +25,20 @@ class ProductController extends Controller
         // Cerca prodotto nel DB
         $product = Product::where('barcode', $barcode)->first();
 
-        // Se non esiste, tenta di recuperarlo da Open Food Facts
+        // Se non esiste, tenta di recuperarlo da Open Food Facts (solo v2)
         if (!$product) {
-            // Prova a recuperarlo da OpenFoodFacts
-            $response = Http::get("https://world.openfoodfacts.org/api/v0/product/{$barcode}.json");
-        
-            if ($response->successful() && $response['status'] == 1) {
+            $response = Http::get("https://world.openfoodfacts.org/api/v2/product/{$barcode}.json");
+            $data = null;
+            if ($response->successful() && isset($response['product']) && !empty($response['product'])) {
                 $data = $response['product'];
-        
+            }
+            if ($data) {
                 $product = Product::create([
                     'barcode' => $barcode,
                     'name' => $data['product_name'] ?? null,
                     'image_url' => $data['image_front_url'] ?? null,
                 ]);
             } else {
-                // return response()->json(['error' => 'Errore nel collegamento a OpenFoodFacts'], 404);
                 return response()->json([
                     'product' => [
                         'barcode' => $barcode,
