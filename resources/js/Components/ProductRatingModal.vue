@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 import axios from 'axios'
 
 const props = defineProps({
@@ -14,6 +14,7 @@ const show = computed({
   set: v => emit('update:modelValue', v)
 })
 
+
 const manualStep = ref(props.initialStep)
 const manualForm = ref({ ...props.initialForm })
 const manualFormError = ref('')
@@ -21,6 +22,9 @@ const manualFormLoading = ref(false)
 const manualProductFound = ref(false)
 const showImageInput = ref(false)
 const newImageUrl = ref('')
+
+// Ref per l'input EAN
+const eanInputRef = ref(null)
 
 const ratingOptions = [
   { value: 'gnuf', label: '😋 Gnuf' },
@@ -31,13 +35,17 @@ const ratingOptions = [
 
 const placeholder = '/img/gnuff-placeholder-192.png';
 
-watch(() => props.modelValue, (v) => {
+watch(() => props.modelValue, async (v) => {
   if (v) {
     manualStep.value = props.initialStep
     manualForm.value = { ...props.initialForm }
     manualFormError.value = ''
     showImageInput.value = false
     newImageUrl.value = ''
+    await nextTick()
+    if (manualStep.value === 'ean' && eanInputRef.value) {
+      eanInputRef.value.focus()
+    }
   }
 })
 
@@ -103,14 +111,21 @@ async function submitManualForm() {
   }
 }
 </script>
-
 <template>
   <div v-if="show" class="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
     <div class="bg-white dark:bg-zinc-900 p-6 rounded shadow-lg w-full max-w-md relative">
       <button @click="show = false" class="absolute top-2 right-2 text-gray-400 hover:text-black">✖</button>
       <h3 class="text-lg font-bold mb-4">Aggiungi/modifica prodotto tramite EAN</h3>
       <form v-if="manualStep === 'ean'" @submit.prevent="cercaEAN" class="flex flex-col gap-3">
-        <input v-model="manualForm.barcode" type="text" placeholder="EAN (barcode)" class="border rounded px-3 py-2" required autofocus />
+        <input
+          v-model="manualForm.barcode"
+          type="text"
+          placeholder="EAN (barcode)"
+          class="border rounded px-3 py-2"
+          required
+          autofocus
+          ref="eanInputRef"
+        />
         <button type="submit" :disabled="manualFormLoading || !manualForm.barcode" class="bg-indigo-600 text-white rounded px-4 py-2 mt-2 hover:bg-indigo-700">
           Cerca prodotto
         </button>
