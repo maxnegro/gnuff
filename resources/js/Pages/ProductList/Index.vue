@@ -48,7 +48,15 @@ import { usePage, router } from '@inertiajs/vue3';
 
 const page = usePage();
 const user = computed(() => page.props.user || page.props.auth.user);
-const lists = computed(() => [ ...(page.props.owned || []), ...(page.props.shared || []) ]);
+const lists = computed(() => {
+  const all = [ ...(page.props.owned || []), ...(page.props.shared || []) ];
+  const seen = new Set();
+  return all.filter(l => {
+    if (seen.has(l.id)) return false;
+    seen.add(l.id);
+    return true;
+  });
+});
 const invitations = computed(() => page.props.invitations || []);
 const newListName = ref('');
 const inviteEmail = ref({});
