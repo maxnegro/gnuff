@@ -14,12 +14,15 @@ class ApiIntegrationTest extends TestCase
     public function test_update_rating_via_api(): void
     {
         $user = User::factory()->create();
+        $productList = \App\Models\ProductList::factory()->create(['owner_id' => $user->id]);
         $barcode = '1234567890999';
-        $this->actingAs($user)->postJson('/api/rate', [
-            'barcode' => $barcode,
-            'value' => 'ok',
-        ]);
-        $rating = Rating::where('user_id', $user->id)->whereHas('product', fn($q) => $q->where('barcode', $barcode))->first();
+        $this->actingAs($user)
+            ->withSession(['active_list_id' => $productList->id])
+            ->postJson('/api/rate', [
+                'barcode' => $barcode,
+                'value' => 'ok',
+            ]);
+        $rating = Rating::where('product_list_id', $productList->id)->whereHas('product', fn($q) => $q->where('barcode', $barcode))->first();
         $response = $this->actingAs($user)->putJson('/api/rate/' . $rating->id, [
             'value' => 'meh',
         ]);
@@ -33,12 +36,15 @@ class ApiIntegrationTest extends TestCase
     public function test_delete_rating_via_api(): void
     {
         $user = User::factory()->create();
+        $productList = \App\Models\ProductList::factory()->create(['owner_id' => $user->id]);
         $barcode = '1234567890888';
-        $this->actingAs($user)->postJson('/api/rate', [
-            'barcode' => $barcode,
-            'value' => 'ok',
-        ]);
-        $rating = Rating::where('user_id', $user->id)->whereHas('product', fn($q) => $q->where('barcode', $barcode))->first();
+        $this->actingAs($user)
+            ->withSession(['active_list_id' => $productList->id])
+            ->postJson('/api/rate', [
+                'barcode' => $barcode,
+                'value' => 'ok',
+            ]);
+        $rating = Rating::where('product_list_id', $productList->id)->whereHas('product', fn($q) => $q->where('barcode', $barcode))->first();
         $response = $this->actingAs($user)->deleteJson('/api/rate/' . $rating->id);
         $response->assertStatus(200);
         $this->assertDatabaseMissing('ratings', [
@@ -49,13 +55,16 @@ class ApiIntegrationTest extends TestCase
     public function test_ratings_pagination_via_api(): void
     {
         $user = User::factory()->create();
+        $productList = \App\Models\ProductList::factory()->create(['owner_id' => $user->id]);
         // Crea 15 rating diversi
         foreach (range(1, 15) as $i) {
             $barcode = '1234567890' . str_pad($i, 3, '0', STR_PAD_LEFT);
-            $this->actingAs($user)->postJson('/api/rate', [
-                'barcode' => $barcode,
-                'value' => 'ok',
-            ]);
+            $this->actingAs($user)
+                ->withSession(['active_list_id' => $productList->id])
+                ->postJson('/api/rate', [
+                    'barcode' => $barcode,
+                    'value' => 'ok',
+                ]);
         }
         $response = $this->actingAs($user)->getJson('/api/ratings?per_page=10');
         $response->assertStatus(200);
@@ -67,16 +76,19 @@ class ApiIntegrationTest extends TestCase
     {
         // Arrange
         $user = User::factory()->create();
+        $productList = \App\Models\ProductList::factory()->create(['owner_id' => $user->id]);
         $barcode = '1234567890123';
         $validData = ['barcode' => $barcode, 'value' => 'gnuf'];
 
         // Act
-        $response = $this->actingAs($user)->postJson('/api/rate', $validData);
+        $response = $this->actingAs($user)
+            ->withSession(['active_list_id' => $productList->id])
+            ->postJson('/api/rate', $validData);
 
         // Assert
         $response->assertStatus(200);
         $this->assertDatabaseHas('ratings', [
-            'user_id' => $user->id,
+            'product_list_id' => $productList->id,
             'rating' => 'gnuf',
         ]);
     }

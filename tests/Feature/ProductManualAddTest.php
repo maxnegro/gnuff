@@ -17,6 +17,7 @@ class ProductManualAddTest extends TestCase
     public function test_add_product_and_rating_manually_with_openfoodfacts_integration()
     {
         $user = User::factory()->create();
+        $productList = \App\Models\ProductList::factory()->create(['owner_id' => $user->id]);
         $barcode = '8002885005110'; // Si&No di Mais
 
         // Step 1: Richiesta GET per recuperare il prodotto (simula la ricerca EAN)
@@ -28,13 +29,15 @@ class ProductManualAddTest extends TestCase
         $this->assertNotEmpty($data['image_url']);
 
         // Step 2: Salva la valutazione
-        $response = $this->actingAs($user)->postJson('/rate', [
-            'barcode' => $barcode,
-            'value' => 'gnuf',
-        ]);
+        $response = $this->actingAs($user)
+            ->withSession(['active_list_id' => $productList->id])
+            ->postJson('/rate', [
+                'barcode' => $barcode,
+                'value' => 'gnuf',
+            ]);
         $response->assertStatus(200);
         $this->assertDatabaseHas('ratings', [
-            'user_id' => $user->id,
+            'product_list_id' => $productList->id,
             'rating' => 'gnuf',
         ]);
         $this->assertDatabaseHas('products', [
@@ -45,6 +48,7 @@ class ProductManualAddTest extends TestCase
     public function test_add_product_and_rating_manually_with_custom_name()
     {
         $user = User::factory()->create();
+        $productList = \App\Models\ProductList::factory()->create(['owner_id' => $user->id]);
         $barcode = '9999999999999'; // barcode fittizio
         $customName = 'Test Prodotto Manuale';
 
@@ -60,13 +64,15 @@ class ProductManualAddTest extends TestCase
         $this->assertEquals($customName, $data['name']);
 
         // Step 2: Salva la valutazione
-        $response = $this->actingAs($user)->postJson('/rate', [
-            'barcode' => $barcode,
-            'value' => 'ok',
-        ]);
+        $response = $this->actingAs($user)
+            ->withSession(['active_list_id' => $productList->id])
+            ->postJson('/rate', [
+                'barcode' => $barcode,
+                'value' => 'ok',
+            ]);
         $response->assertStatus(200);
         $this->assertDatabaseHas('ratings', [
-            'user_id' => $user->id,
+            'product_list_id' => $productList->id,
             'rating' => 'ok',
         ]);
         $this->assertDatabaseHas('products', [
