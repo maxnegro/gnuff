@@ -34,7 +34,7 @@ class User extends Authenticatable
         static::created(function ($user) {
             // Crea una lista di default per ogni nuovo utente
             $list = \App\Models\ProductList::create([
-                'name' => 'Lista di default',
+                'name' => 'Default',
                 'owner_id' => $user->id,
             ]);
             $list->users()->attach($user->id);

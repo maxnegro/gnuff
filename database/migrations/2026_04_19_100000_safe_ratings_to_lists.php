@@ -34,10 +34,21 @@ return new class extends Migration
             $table->foreignId('product_list_id')->nullable(false)->change();
         });
 
-        // 5. Elimina user_id
+        // 5. Rimuovi la foreign key su user_id
         Schema::table('ratings', function (Blueprint $table) {
             $table->dropForeign(['user_id']);
+        });
+        // 6. Rimuovi la unique constraint su user_id, product_id
+        Schema::table('ratings', function (Blueprint $table) {
+            $table->dropUnique('ratings_user_id_product_id_unique');
+        });
+        // 7. Elimina user_id
+        Schema::table('ratings', function (Blueprint $table) {
             $table->dropColumn('user_id');
+        });
+        // 8. Aggiungi la nuova unique constraint su product_id, product_list_id
+        Schema::table('ratings', function (Blueprint $table) {
+            $table->unique(['product_id', 'product_list_id']);
         });
     }
 
