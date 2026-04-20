@@ -110,11 +110,24 @@ async function submitManualForm() {
   manualFormError.value = ''
   manualFormLoading.value = true
   try {
-    const prodRes = await axios.post('/product', {
-      barcode: manualForm.value.barcode,
-      name: manualForm.value.name,
-      image_url: manualForm.value.image_url || null,
-    })
+    // Recupera il nome originale per capire se è stato modificato
+    let originalName = props.initialForm?.name || ''
+    let productExists = !!manualForm.value.barcode
+    // Se il prodotto esiste già e il nome è stato modificato, aggiorna il nome
+    if (productExists && manualForm.value.name && manualForm.value.name !== originalName) {
+      // Ora la rotta accetta barcode come parametro
+      await axios.put(`/product/${manualForm.value.barcode}`, {
+        name: manualForm.value.name,
+        image: manualForm.value.image_url || null,
+      })
+    } else {
+      // Se il prodotto non esiste (creazione), POST come prima
+      await axios.post('/product', {
+        barcode: manualForm.value.barcode,
+        name: manualForm.value.name,
+        image_url: manualForm.value.image_url || null,
+      })
+    }
     await axios.post('/rate', {
       barcode: manualForm.value.barcode,
       value: manualForm.value.rating,

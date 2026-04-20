@@ -147,22 +147,28 @@
             ]);
         }
 
-        public function update(Request $request, Product $product)
+        public function update(Request $request, $barcode)
         {
             $request->validate([
                 'name' => 'required|string|max:255',
                 'image' => 'nullable|url',
             ]);
 
+            $product = Product::where('barcode', $barcode)->firstOrFail();
             $product->update($request->only(['name', 'image']));
+            $product->refresh();
 
-            return redirect()->route('dashboard')->with('success', 'Prodotto aggiornato');
+            return response()->json([
+                'success' => true,
+                'product' => $product->toArray(),
+            ]);
         }
 
         public function destroy(Product $product)
         {
             $product->delete();
-
-            return redirect()->route('dashboard')->with('success', 'Prodotto eliminato');
+            return response()->json([
+                'success' => true,
+            ]);
         }
     }

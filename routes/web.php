@@ -28,7 +28,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Product routes
     Route::get('/products', [\App\Http\Controllers\ProductController::class, 'listPage'])->name('product.list');
     Route::get('/product/{barcode}', [ProductController::class, 'show'])->name('product.show');
-    Route::put('/product/{product}', [ProductController::class, 'update'])->name('product.update');
+    Route::put('/product/{barcode}', [ProductController::class, 'update'])->name('product.update');
     Route::delete('/product/{product}', [ProductController::class, 'destroy'])->name('product.destroy');
     Route::get('/product/{product}/edit', [ProductController::class, 'edit'])->name('product.edit');
 
