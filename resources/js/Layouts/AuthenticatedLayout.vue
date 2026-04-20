@@ -57,7 +57,7 @@ const showingNavigationDropdown = ref(false);
                         <!-- Logo -->
                         <div class="flex shrink-0 items-center">
                             <Link :href="route('dashboard')">
-                            <ApplicationLogo class="block h-9 w-auto fill-current text-gray-800" />
+                                <ApplicationLogo class="block h-9 w-auto fill-current text-gray-800" />
                             </Link>
                         </div>
 
@@ -73,9 +73,9 @@ const showingNavigationDropdown = ref(false);
                                 Prodotti
                             </NavLink>
 
-                                <NavLink :href="route('lists.index')" :active="route().current('lists.index')">
-                                    Liste
-                                </NavLink>
+                            <NavLink :href="route('lists.index')" :active="route().current('lists.index')">
+                                Liste
+                            </NavLink>
 
                         </div>
                     </div>
@@ -153,9 +153,9 @@ const showingNavigationDropdown = ref(false);
                     <ResponsiveNavLink :href="route('product.list')" :active="route().current('product.list')">
                         Prodotti
                     </ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('lists.index')" :active="route().current('lists.index')">
-                            Liste
-                        </ResponsiveNavLink>
+                    <ResponsiveNavLink :href="route('lists.index')" :active="route().current('lists.index')">
+                        Liste
+                    </ResponsiveNavLink>
                 </div>
 
                 <!-- Responsive Settings Options -->
@@ -180,16 +180,13 @@ const showingNavigationDropdown = ref(false);
                 </div>
             </div>
         </nav>
-        
+
         <!-- Barra selezione lista attiva -->
         <div class="w-full flex justify-center bg-white dark:bg-zinc-900 border-b border-gray-200">
             <div class="flex items-center gap-2 px-4 py-2">
                 <span class="font-semibold">Lista attiva:</span>
-                <select
-                    v-model="activeListId"
-                    @change="e => changeActiveList(e.target.value)"
-                    class="rounded border px-2 py-1 bg-gray-50 dark:bg-zinc-800 text-black dark:text-white min-w-[10rem] pr-8"
-                >
+                <select v-model="activeListId" @change="e => changeActiveList(e.target.value)"
+                    class="rounded border px-2 py-1 bg-gray-50 dark:bg-zinc-800 text-black dark:text-white min-w-[10rem] pr-8">
                     <option v-for="list in allLists" :key="list.id" :value="list.id">
                         {{ list.name }}
                     </option>
