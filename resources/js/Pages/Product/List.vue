@@ -56,9 +56,14 @@ const ratingEmojis = { gnuf: '😋', ok: '😊', meh: '😐', bleah: '🤮' };
 const placeholder = '/img/gnuff-placeholder-192.png';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 defineOptions({ layout: AuthenticatedLayout });
-import { ref, computed, onMounted } from 'vue';
+
+import { ref, computed, watch } from 'vue';
 import axios from 'axios';
 import { usePage } from '@inertiajs/vue3';
+
+
+const page = usePage();
+const activeListId = computed(() => page.props.activeList ? page.props.activeList.id : null);
 
 const products = ref([]);
 const search = ref('');
@@ -71,15 +76,40 @@ const sortableFields = ['name', 'barcode'];
 const fieldLabels = { name: 'Nome', barcode: 'Barcode', image_url: 'Immagine' };
 const ratingOptions = ['gnuf', 'ok', 'meh', 'bleah'];
 
+
 const fetchProducts = async () => {
-  // Carica tutti i prodotti
-  const pres = await axios.get('/api/products?per_page=100');
-  products.value = pres.data.data;
-  // Carica tutti i rating dell'utente
-  const res = await axios.get('/api/ratings?per_page=100');
-  res.data.data.forEach(r => {
-    if (r.product && r.rating) ratings.value[r.product.id] = r.rating;
-  });
+  console.log('fetchProducts chiamata, activeListId:', activeListId.value);
+  if (!activeListId.value) {
+    console.log('Nessuna lista attiva, esco');
+    products.value = [];
+    ratings.value = {};
+    return;
+  }
+  try {
+    // Carica tutti i prodotti (senza filtro lista)
+    const pres = await axios.get(`/api/products?per_page=100`);
+    console.log('Risposta /api/products:', pres.data);
+    // Adatta qui se la struttura non è pres.data.data
+    if (Array.isArray(pres.data)) {
+      products.value = pres.data;
+    } else if (Array.isArray(pres.data.data)) {
+      products.value = pres.data.data;
+    } else if (pres.data && pres.data.products) {
+      products.value = pres.data.products;
+    } else {
+      products.value = [];
+    }
+    console.log('Prodotti caricati:', products.value);
+    // Carica tutti i rating dell'utente per la lista attiva
+    const res = await axios.get(`/api/ratings?per_page=100&list_id=${activeListId.value}`);
+    ratings.value = {};
+    res.data.data.forEach(r => {
+      if (r.product && r.rating) ratings.value[r.product.id] = r.rating;
+    });
+    console.log('Ratings caricati:', ratings.value);
+  } catch (e) {
+    console.error('Errore in fetchProducts:', e);
+  }
 };
 
 const filteredProducts = computed(() => {
@@ -138,7 +168,14 @@ async function rateProduct(product) {
   await axios.post('/api/rate', { barcode: product.barcode, value });
 }
 
-onMounted(fetchProducts);
+
+// Aggiorna prodotti e rating quando cambia la lista attiva
+watch(activeListId, () => {
+  fetchProducts();
+});
+
+// Primo caricamento
+fetchProducts();
 </script>
 
 <style scoped>

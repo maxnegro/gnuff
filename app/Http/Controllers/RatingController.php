@@ -85,10 +85,10 @@ class RatingController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->input('per_page', 10);
-        $activeListId = session('active_list_id');
+        $listId = $request->input('list_id') ?? session('active_list_id');
         $query = Rating::with('product');
-        if ($activeListId) {
-            $query->where('product_list_id', $activeListId);
+        if ($listId) {
+            $query->where('product_list_id', $listId);
         }
         $ratings = $query->latest()->paginate($perPage);
         return response()->json($ratings);

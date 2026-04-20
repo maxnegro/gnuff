@@ -20,13 +20,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // API: lista attiva e tutte le liste dell'utente
         Route::get('/lists/active-and-all', [\App\Http\Controllers\ProductListController::class, 'activeAndAll']);
-    Route::get('/dashboard', fn() => Inertia::render('Dashboard'))->name('dashboard');
+    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, '__invoke'])->name('dashboard');
 
     // Scanner page
     Route::get('/scanner', fn() => Inertia::render('Scanner'))->name('scanner');
 
     // Product routes
-    Route::get('/products', fn() => Inertia::render('Product/List'))->name('product.list');
+    Route::get('/products', [\App\Http\Controllers\ProductController::class, 'listPage'])->name('product.list');
     Route::get('/product/{barcode}', [ProductController::class, 'show'])->name('product.show');
     Route::put('/product/{product}', [ProductController::class, 'update'])->name('product.update');
     Route::delete('/product/{product}', [ProductController::class, 'destroy'])->name('product.destroy');

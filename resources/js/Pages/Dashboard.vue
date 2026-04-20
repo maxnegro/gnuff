@@ -1,33 +1,22 @@
 <script setup>
 
-const activeList = ref(null)
-const activeListId = ref(null)
-const allLists = ref([])
 
-async function fetchActiveAndAllLists() {
-  try {
-    const res = await axios.get('/lists/active-and-all')
-    activeList.value = res.data.active
-    allLists.value = res.data.all
-    activeListId.value = res.data.active ? res.data.active.id : null
-  } catch (e) {
-    activeList.value = null
-    allLists.value = []
-  }
-}
 
-async function changeActiveList(listId) {
-  await axios.post(`/lists/${listId}/active`)
-  await fetchActiveAndAllLists()
-  await fetchRatings()
-}
+
+
+
+
+import { router, usePage } from '@inertiajs/vue3'
+
+
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Link } from '@inertiajs/vue3'
 
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import ProductRatingModal from '@/Components/ProductRatingModal.vue'
 
+const page = usePage()
 // Stato per la modale prodotto/valutazione
 const showManualForm = ref(false)
 const manualStep = ref('ean')
@@ -68,7 +57,8 @@ defineOptions({
   layout: AuthenticatedLayout,
 })
 
-const ratings = ref([])
+
+const ratings = ref(page.props.ratings || [])
 
 const emojiMap = {
   gnuf: '😋',
@@ -79,19 +69,18 @@ const emojiMap = {
 
 const placeholder = '/img/gnuff-placeholder-192.png';
 
-async function fetchRatings() {
-  try {
-    const response = await axios.get('/user/ratings')
-    ratings.value = response.data
-  } catch (e) {
-    console.error('Errore caricamento valutazioni:', e)
-  }
-}
 
-onMounted(() => {
-  fetchActiveAndAllLists()
-  fetchRatings()
-})
+// Aggiorna ratings quando cambiano le props di Inertia
+watch(
+  () => page.props.ratings,
+  (newRatings) => {
+    ratings.value = newRatings || []
+  }
+)
+
+
+
+// Nessun fetch manuale: tutto da Inertia
 
 
 
@@ -106,17 +95,15 @@ onMounted(() => {
           <div class="flex lg:justify-center items-center gap-4 w-full">
             <img src="/img/icon-192.png" class="flex-shrink-0" />
           </div>
-          <div class="flex lg:justify-center items-center gap-4 w-full">
-            <div class="flex flex-col gap-2 w-full ml-auto">
-              <button @click="$inertia.visit('/scanner')"
-                class="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                📷 Scan
-              </button>
-              <button @click="openNewModal"
-                class="w-full px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                ➕ EAN
-              </button>
-            </div>
+          <div class="flex flex-col gap-2 w-full ml-auto">
+            <button @click="$inertia.visit('/scanner')"
+              class="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+              📷 Scan
+            </button>
+            <button @click="openNewModal"
+              class="w-full px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+              ➕ EAN
+            </button>
           </div>
         </header>
         <main class="mt-6">
@@ -124,7 +111,7 @@ onMounted(() => {
             <div
               class="flex flex-col gap-4 rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800 text-gray-600">
               <ProductRatingModal v-model="showManualForm" :initial-step="manualStep" :initial-form="manualForm"
-                @saved="fetchRatings" />
+                @saved="() => router.reload({ only: ['ratings'] })" />
 
               <template v-if="ratings.length">
                 <section style="width: 100%;">
