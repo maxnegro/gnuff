@@ -87,7 +87,7 @@ watch(
 </script>
 
 <template>
-  <div class="bg-gray-50 text-black/50 dark:bg-black dark:text-white/50">
+  <div class="bg-gray-50 text-black dark:bg-black dark:text-white">
     <div
       class="relative flex min-h-screen flex-col items-center justify-center selection:bg-[#FF2D20] selection:text-white">
       <div class="relative w-full max-w-2xl px-6 lg:max-w-7xl">
@@ -144,7 +144,7 @@ watch(
             </div>
           </div>
         </main>
-        <footer class="py-16 text-center text-sm text-black dark:text-white/70">Wonderful app by MN
+        <footer class="py-16 text-center text-sm text-black dark:text-white">Wonderful app by MN
         </footer>
       </div>
     </div>
