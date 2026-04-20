@@ -21,7 +21,7 @@
             </th>
             <th class="py-2 px-2 text-left cursor-pointer select-none hover:bg-blue-100"
                 @click="sortBy('rating')">
-              Val
+              Valore
               <span v-if="sort.field === 'rating'">
                 {{ sort.direction === 'asc' ? '▲' : '▼' }}
               </span>
@@ -29,21 +29,23 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="product in filteredProducts" :key="product.id" class="border-b">
+          <tr v-for="product in filteredProducts" :key="product.id" class="border-b hover:bg-blue-50 cursor-pointer" @click="openEditModal(product)">
             <td class="py-2 px-2">{{ product.name }}</td>
             <td class="py-2 px-2 font-mono">{{ product.barcode }}</td>
             <td class="py-2 px-2">
               <img :src="product.image_url || placeholder" @error="e => e.target.src = placeholder" alt="img" class="w-12 h-12 object-cover rounded" />
             </td>
-            <td class="py-2 px-2">
-              <select v-model="ratings[product.id]" class="select select-xs" @change="rateProduct(product)">
-                <option value="">-</option>
-                <option v-for="val in ratingOptions" :key="val" :value="val">
-                  {{ ratingEmojis[val] || '' }} {{ val.charAt(0).toUpperCase() + val.slice(1) }}
-                </option>
-              </select>
+            <td class="py-2 px-3 whitespace-nowrap">
+              <span class="text-xl">{{ ratingEmojis[ratings[product.id]] || '' }}</span>
+              <span v-if="ratings[product.id]"> ({{ ratings[product.id] }})</span>
             </td>
           </tr>
+            <ProductRatingModal
+              v-model="showProductModal"
+              :initial-step="modalStep"
+              :initial-form="modalForm"
+              @saved="onModalSaved"
+            />
         </tbody>
       </table>
       <div v-if="filteredProducts.length === 0" class="text-center text-gray-400 py-8">Nessun prodotto trovato.</div>
@@ -52,6 +54,27 @@
 </template>
 
 <script setup>
+import ProductRatingModal from '@/Components/ProductRatingModal.vue';
+
+const showProductModal = ref(false);
+const modalStep = ref('ean');
+const modalForm = ref({ barcode: '', name: '', image_url: '', rating: '' });
+
+function openEditModal(product) {
+  modalForm.value = {
+    barcode: product.barcode,
+    name: product.name,
+    image_url: product.image_url,
+    rating: ratings.value[product.id] || '',
+  };
+  modalStep.value = 'dati';
+  showProductModal.value = true;
+}
+
+function onModalSaved() {
+  showProductModal.value = false;
+  fetchProducts();
+}
 const ratingEmojis = { gnuf: '😋', ok: '😊', meh: '😐', bleah: '🤮' };
 const placeholder = '/img/gnuff-placeholder-192.png';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
@@ -78,7 +101,7 @@ const ratingOptions = ['gnuf', 'ok', 'meh', 'bleah'];
 
 
 const fetchProducts = async () => {
-  console.log('fetchProducts chiamata, activeListId:', activeListId.value);
+  // console.log('fetchProducts chiamata, activeListId:', activeListId.value);
   if (!activeListId.value) {
     console.log('Nessuna lista attiva, esco');
     products.value = [];
@@ -88,7 +111,7 @@ const fetchProducts = async () => {
   try {
     // Carica tutti i prodotti (senza filtro lista)
     const pres = await axios.get(`/api/products?per_page=100`);
-    console.log('Risposta /api/products:', pres.data);
+    // console.log('Risposta /api/products:', pres.data);
     // Adatta qui se la struttura non è pres.data.data
     if (Array.isArray(pres.data)) {
       products.value = pres.data;
@@ -99,14 +122,14 @@ const fetchProducts = async () => {
     } else {
       products.value = [];
     }
-    console.log('Prodotti caricati:', products.value);
+    // console.log('Prodotti caricati:', products.value);
     // Carica tutti i rating dell'utente per la lista attiva
     const res = await axios.get(`/api/ratings?per_page=100&list_id=${activeListId.value}`);
     ratings.value = {};
     res.data.data.forEach(r => {
       if (r.product && r.rating) ratings.value[r.product.id] = r.rating;
     });
-    console.log('Ratings caricati:', ratings.value);
+    // console.log('Ratings caricati:', ratings.value);
   } catch (e) {
     console.error('Errore in fetchProducts:', e);
   }

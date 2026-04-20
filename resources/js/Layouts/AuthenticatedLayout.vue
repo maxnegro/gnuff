@@ -18,6 +18,15 @@ const allLists = computed(() => {
 const activeList = computed(() => page.props.active_list || null);
 const activeListId = ref(activeList.value ? activeList.value.id : null);
 
+// Sincronizza activeListId con la lista attiva server-side
+import { watch } from 'vue';
+watch(
+    () => page.props.active_list,
+    (newActive) => {
+        activeListId.value = newActive ? newActive.id : null;
+    }
+);
+
 // Aggiorna la lista attiva lato server e aggiorna la pagina
 async function changeActiveList(listId) {
     router.post(`/lists/${listId}/active`, {}, {

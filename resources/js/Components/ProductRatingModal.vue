@@ -35,6 +35,8 @@ const ratingOptions = [
 
 const placeholder = '/img/gnuff-placeholder-192.png';
 
+
+// Quando la modale viene aperta, resetta lo stato e prova a recuperare immagine se mancante
 watch(() => props.modelValue, async (v) => {
   if (v) {
     manualStep.value = props.initialStep
@@ -45,6 +47,21 @@ watch(() => props.modelValue, async (v) => {
     await nextTick()
     if (manualStep.value === 'ean' && eanInputRef.value) {
       eanInputRef.value.focus()
+    }
+    // LOGICA AGGIUNTA: se siamo in step 'dati', abbiamo barcode e manca image_url, prova fetch
+    if (
+      manualStep.value === 'dati' &&
+      manualForm.value.barcode &&
+      !manualForm.value.image_url
+    ) {
+      try {
+        const res = await axios.get(`/product/${manualForm.value.barcode}`)
+        if (res.data && res.data.product && res.data.product.image_url) {
+          manualForm.value.image_url = res.data.product.image_url
+        }
+      } catch (e) {
+        // Silenzio errori, fallback su placeholder
+      }
     }
   }
 })
