@@ -188,9 +188,9 @@ async function submitManualForm() {
           autofocus
           ref="eanInputRef"
         />
-        <button type="submit" :disabled="manualFormLoading || !manualForm.barcode" class="bg-indigo-600 text-white rounded px-4 py-2 mt-2 hover:bg-indigo-700">
-          Cerca prodotto
-        </button>
+<button type="submit" :disabled="manualFormLoading || !manualForm.barcode" class="w-full bg-primary-600 text-white rounded-lg px-4 py-2.5 mt-2 hover:bg-primary-700 transition">
+  Cerca prodotto
+</button>
         <p v-if="manualFormError" class="text-red-500">{{ manualFormError }}</p>
       </form>
       <div v-else-if="manualStep === 'dati'" class="flex flex-col gap-3">
@@ -207,8 +207,8 @@ async function submitManualForm() {
         <div v-if="showImageInput" class="flex flex-col gap-2 mb-2">
           <input v-model="newImageUrl" type="url" placeholder="Nuovo URL immagine" class="border rounded px-3 py-2" />
           <div class="flex gap-2">
-            <button @click="updateImageUrl" type="button" class="bg-indigo-600 text-white rounded px-3 py-1 hover:bg-indigo-700">Salva immagine</button>
-            <button @click="showImageInput = false" type="button" class="bg-gray-300 rounded px-3 py-1 hover:bg-gray-400">Annulla</button>
+<button @click="updateImageUrl" type="button" class="flex-1 bg-primary-600 text-white rounded-lg px-3 py-2.5 hover:bg-primary-700 transition">Salva immagine</button>
+<button @click="showImageInput = false" type="button" class="flex-1 bg-secondary-300 text-secondary-700 rounded-lg px-3 py-2.5 hover:bg-secondary-400 transition">Annulla</button>
           </div>
         </div>
         <form @submit.prevent="submitManualForm" class="flex flex-col gap-3">
@@ -217,9 +217,9 @@ async function submitManualForm() {
             <option value="" disabled>Valutazione</option>
             <option v-for="opt in ratingOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
           </select>
-          <button type="submit" :disabled="manualFormLoading" class="bg-indigo-600 text-white rounded px-4 py-2 mt-2 hover:bg-indigo-700">
-            Salva valutazione
-          </button>
+<button type="submit" :disabled="manualFormLoading" class="w-full bg-primary-600 text-white rounded-lg px-4 py-2.5 mt-2 hover:bg-primary-700 transition">
+  Salva valutazione
+</button>
           <p v-if="manualFormError" class="text-red-500">{{ manualFormError }}</p>
         </form>
       </div>
@@ -231,9 +231,9 @@ async function submitManualForm() {
             <option value="" disabled>Valutazione</option>
             <option v-for="opt in ratingOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
           </select>
-          <button type="submit" :disabled="manualFormLoading" class="bg-indigo-600 text-white rounded px-4 py-2 mt-2 hover:bg-indigo-700">
-            Salva valutazione
-          </button>
+<button type="submit" :disabled="manualFormLoading" class="w-full bg-primary-600 text-white rounded-lg px-4 py-2.5 mt-2 hover:bg-primary-700 transition">
+  Salva valutazione
+</button>
           <p v-if="manualFormError" class="text-red-500">{{ manualFormError }}</p>
         </form>
       </div>

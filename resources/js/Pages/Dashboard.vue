@@ -96,14 +96,14 @@ watch(
             <img src="/img/icon-192.png" class="flex-shrink-0" />
           </div>
           <div class="flex flex-col gap-2 w-full ml-auto">
-            <button @click="$inertia.visit('/scanner')"
-              class="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-              📷 Scan
-            </button>
-            <button @click="openNewModal"
-              class="w-full px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-              ➕ EAN
-            </button>
+<button @click="$inertia.visit('/scanner')"
+    class="w-full px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700">
+    📷 Scan
+</button>
+<button @click="openNewModal"
+    class="w-full px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700">
+    ➕ EAN
+</button>
           </div>
         </header>
         <main class="mt-6">
