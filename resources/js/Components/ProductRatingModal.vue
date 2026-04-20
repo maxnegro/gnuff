@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed, nextTick } from 'vue'
+import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import axios from 'axios'
 
 const props = defineProps({
@@ -36,10 +36,37 @@ const ratingOptions = [
 const placeholder = '/img/gnuff-placeholder-192.png';
 
 
+// Gestione chiusura con ESC
+function handleEscClose(e) {
+  if (e.key === 'Escape') {
+    show.value = false
+  }
+}
+
+onMounted(() => {
+  watch(
+    () => props.modelValue,
+    (v) => {
+      if (v) {
+        window.addEventListener('keydown', handleEscClose)
+      } else {
+        window.removeEventListener('keydown', handleEscClose)
+      }
+    },
+    { immediate: true }
+  )
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleEscClose)
+})
+
+
 // Quando la modale viene aperta, resetta lo stato e prova a recuperare immagine se mancante
 watch(() => props.modelValue, async (v) => {
   if (v) {
     manualStep.value = props.initialStep
+    // Usa sempre i dati dal DB come base
     manualForm.value = { ...props.initialForm }
     manualFormError.value = ''
     showImageInput.value = false
@@ -48,16 +75,22 @@ watch(() => props.modelValue, async (v) => {
     if (manualStep.value === 'ean' && eanInputRef.value) {
       eanInputRef.value.focus()
     }
-    // LOGICA AGGIUNTA: se siamo in step 'dati', abbiamo barcode e manca image_url, prova fetch
+    // La fetch viene fatta solo se i campi sono vuoti nel DB (props.initialForm)
     if (
       manualStep.value === 'dati' &&
       manualForm.value.barcode &&
-      !manualForm.value.image_url
+      (!props.initialForm.image_url || !props.initialForm.name)
     ) {
       try {
         const res = await axios.get(`/product/${manualForm.value.barcode}`)
-        if (res.data && res.data.product && res.data.product.image_url) {
-          manualForm.value.image_url = res.data.product.image_url
+        if (res.data && res.data.product) {
+          // Aggiorna solo i campi che erano vuoti nel DB
+          if (!props.initialForm.image_url && res.data.product.image_url) {
+            manualForm.value.image_url = res.data.product.image_url
+          }
+          if (!props.initialForm.name && res.data.product.name) {
+            manualForm.value.name = res.data.product.name
+          }
         }
       } catch (e) {
         // Silenzio errori, fallback su placeholder
@@ -110,17 +143,16 @@ async function submitManualForm() {
   manualFormError.value = ''
   manualFormLoading.value = true
   try {
-    // Recupera il nome originale per capire se è stato modificato
-    let originalName = props.initialForm?.name || ''
+    // Confronta con i dati originali dal DB
+    const original = props.initialForm || {}
+    const updates = {}
+    if (manualForm.value.name !== original.name) updates.name = manualForm.value.name
+    if (manualForm.value.image_url !== original.image_url) updates.image = manualForm.value.image_url || null
     let productExists = !!manualForm.value.barcode
-    // Se il prodotto esiste già e il nome è stato modificato, aggiorna il nome
-    if (productExists && manualForm.value.name && manualForm.value.name !== originalName) {
-      // Ora la rotta accetta barcode come parametro
-      await axios.put(`/product/${manualForm.value.barcode}`, {
-        name: manualForm.value.name,
-        image: manualForm.value.image_url || null,
-      })
-    } else {
+    if (productExists && Object.keys(updates).length > 0) {
+      // Aggiorna solo i campi modificati
+      await axios.put(`/product/${manualForm.value.barcode}`, updates)
+    } else if (!productExists) {
       // Se il prodotto non esiste (creazione), POST come prima
       await axios.post('/product', {
         barcode: manualForm.value.barcode,
