@@ -19,7 +19,7 @@ class RatingController extends Controller
             ['barcode' => $request->barcode],
             [
                 'name' => 'Prodotto sconosciuto',
-                'image_url' => 'https://via.placeholder.com/640x480.png?text=Prodotto',
+                'image_url' => 'https://placehold.co/640x480.png?text=Prodotto',
             ]
         );
 
@@ -47,7 +47,7 @@ class RatingController extends Controller
             return response()->json([]); // Nessuna lista attiva selezionata
         }
         $ratings = \App\Models\Rating::where('product_list_id', $activeListId)
-            ->with('product')
+            ->with(['product', 'productList'])
             ->latest()
             ->take(10)
             ->get();

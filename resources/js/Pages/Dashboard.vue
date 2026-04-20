@@ -108,52 +108,47 @@ onMounted(() => {
           </div>
           <div class="flex lg:justify-center items-center gap-4 w-full">
             <div class="flex flex-col gap-2 w-full ml-auto">
-              <button
-                @click="$inertia.visit('/scanner')"
-                class="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-              >
+              <button @click="$inertia.visit('/scanner')"
+                class="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
                 📷 Scan
               </button>
-              <button
-                @click="openNewModal"
-                class="w-full px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-              >
+              <button @click="openNewModal"
+                class="w-full px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
                 ➕ EAN
               </button>
             </div>
           </div>
         </header>
         <main class="mt-6">
-                  <div class="grid items-center">
-                    <div class="flex flex-col gap-4 rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800 text-gray-600">
-                      <ProductRatingModal
-                        v-model="showManualForm"
-                        :initial-step="manualStep"
-                        :initial-form="manualForm"
-                        @saved="fetchRatings"
-                      />
+          <div class="grid items-center">
+            <div
+              class="flex flex-col gap-4 rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800 text-gray-600">
+              <ProductRatingModal v-model="showManualForm" :initial-step="manualStep" :initial-form="manualForm"
+                @saved="fetchRatings" />
 
-                      <template v-if="ratings.length">
-                        <section style="width: 100%;">
-                          <h2 class="text-xl font-semibold mb-4">Le tue valutazioni recenti</h2>
-                          <ul class="space-y-2 w-full">
-                            <li v-for="rating in ratings" :key="rating.id" class="bg-white p-4 mb-2 rounded shadow w-full cursor-pointer hover:bg-gray-100 transition"
-                                @click="openEditModal(rating)">
-                              <div class="flex items-center w-full">
-                                <img :src="rating.product.image_url || placeholder" alt="Immagine prodotto" class="min-w-16 min-h-16 w-16 h-16 object-cover rounded mr-4" />
-                                <div>
-                                  <h2 class="text-lg font-semibold">{{ rating.product.name }}</h2>
-                                  <p class="text-2xl">{{ emojiMap[rating.rating] }} ({{ rating.rating }})</p>
-                                  <p class="text-xs">Valutato il {{ new Date(rating.updated_at).toLocaleString() }}</p>
-                                </div>
-                              </div>
-                            </li>
-                          </ul>
-                        </section>
-                      </template>
-                      <p v-else class="text-gray-500">
-                        Non hai ancora fatto nessuna valutazione.
-                      </p>
+              <template v-if="ratings.length">
+                <section style="width: 100%;">
+                  <h2 class="text-xl font-semibold mb-4">Le tue valutazioni recenti</h2>
+                  <ul class="space-y-2 w-full">
+                    <li v-for="rating in ratings" :key="rating.id"
+                      class="bg-white p-4 mb-2 rounded shadow w-full cursor-pointer hover:bg-gray-100 transition"
+                      @click="openEditModal(rating)">
+                      <div class="flex items-center w-full">
+                        <img :src="rating.product.image_url || placeholder" alt="Immagine prodotto"
+                          class="min-w-16 min-h-16 w-16 h-16 object-cover rounded mr-4" />
+                        <div>
+                          <h2 class="text-lg font-semibold">{{ rating.product.name }}</h2>
+                          <p class="text-2xl">{{ emojiMap[rating.rating] }} ({{ rating.rating }})</p>
+                          <p class="text-xs">Valutato il {{ new Date(rating.updated_at).toLocaleString() }} in {{ rating.product_list.name }}</p>
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                </section>
+              </template>
+              <p v-else class="text-gray-500">
+                Non hai ancora fatto nessuna valutazione.
+              </p>
             </div>
           </div>
         </main>
