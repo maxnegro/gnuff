@@ -13,17 +13,18 @@
          */
         public function listPage(Request $request)
         {
-            $user = auth()->user();
-            $activeListId = $request->session()->get('active_list_id');
-            $owned = $user->ownedProductLists()->get();
-            $shared = $user->sharedProductLists()->get();
-            $allLists = $owned->concat($shared)->unique('id')->values();
-            $activeList = $allLists->firstWhere('id', $activeListId) ?? $allLists->first();
+        $user = auth()->user();
+        $activeListId = $request->session()->get('active_list_id');
+        $owned = $user->ownedProductLists()->get();
+        $shared = $user->sharedProductLists()->get();
+        $all = $owned->concat($shared)->unique('id')->values();
+        $active_list = $all->firstWhere('id', $activeListId) ?? $all->first();
 
-            return Inertia::render('Product/List', [
-                'activeList' => $activeList,
-                'allLists' => $allLists,
-            ]);
+        return Inertia::render('Product/List', [
+            'active_list' => $active_list,
+            'owned' => $owned,
+            'shared' => $shared,
+        ]);
         }
 
         /**

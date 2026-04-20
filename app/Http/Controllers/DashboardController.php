@@ -15,23 +15,24 @@ class DashboardController extends Controller
         $user = Auth::user();
         $activeListId = $request->input('active_list_id') ?? $request->session()->get('active_list_id');
 
-        // Recupera tutte le liste dell'utente (proprietario o condivise)
-        $allLists = $user->ownedProductLists->merge($user->sharedProductLists);
+        $owned = $user->ownedProductLists;
+        $shared = $user->sharedProductLists;
+        $all = $owned->merge($shared)->unique('id')->values();
 
         // Determina la lista attiva
-        $activeList = null;
+        $active_list = null;
         if ($activeListId) {
-            $activeList = $allLists->firstWhere('id', $activeListId);
+            $active_list = $all->firstWhere('id', $activeListId);
         }
-        if (!$activeList && $allLists->count()) {
-            $activeList = $allLists->first();
+        if (!$active_list && $all->count()) {
+            $active_list = $all->first();
         }
 
         // Recupera le valutazioni filtrate per la lista attiva (se presente)
         $ratings = collect();
-        if ($activeList) {
+        if ($active_list) {
             $ratings = Rating::with(['product', 'productList'])
-                ->where('product_list_id', $activeList->id)
+                ->where('product_list_id', $active_list->id)
                 ->whereHas('productList', function ($q) use ($user) {
                     $q->where('owner_id', $user->id)
                         ->orWhereHas('users', function ($q2) use ($user) {
@@ -45,8 +46,9 @@ class DashboardController extends Controller
 
         return Inertia::render('Dashboard', [
             'ratings' => $ratings,
-            'activeList' => $activeList,
-            'allLists' => $allLists,
+            'active_list' => $active_list,
+            'owned' => $owned,
+            'shared' => $shared,
         ]);
     }
 }

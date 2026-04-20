@@ -33,6 +33,25 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Imposta la lista attiva in sessione dopo login
+        $user = Auth::user();
+        $owned = $user->ownedProductLists()->get();
+        $shared = $user->sharedProductLists()->get();
+        $all = $owned->concat($shared)->unique('id')->values();
+        $active = null;
+        if ($user->selected_list_id) {
+            $active = $all->firstWhere('id', $user->selected_list_id);
+        }
+        if (!$active) {
+            $active = $all->firstWhere(fn($l) => strtolower($l->name) === 'default');
+        }
+        if (!$active) {
+            $active = $all->first();
+        }
+        if ($active) {
+            $request->session()->put('active_list_id', $active->id);
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

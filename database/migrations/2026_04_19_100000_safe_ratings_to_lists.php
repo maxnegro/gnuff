@@ -20,7 +20,7 @@ return new class extends Migration
         $users = DB::table('users')->get();
         foreach ($users as $user) {
             $listId = DB::table('product_lists')->insertGetId([
-                'name' => 'I miei prodotti',
+                'name' => 'Default',
                 'owner_id' => $user->id,
                 'created_at' => now(),
                 'updated_at' => now(),

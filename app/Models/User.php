@@ -56,7 +56,13 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'selected_list_id',
     ];
+
+    public function selectedList()
+    {
+        return $this->belongsTo(ProductList::class, 'selected_list_id');
+    }
 
     /**
      * The attributes that should be hidden for serialization.

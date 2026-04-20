@@ -13,30 +13,54 @@ class ProductListController extends Controller {
 
         // API: restituisce lista attiva e tutte le liste dell'utente
         public function activeAndAll(Request $request)
-        {
-            $user = Auth::user();
-            $activeListId = $request->session()->get('active_list_id');
-            $owned = $user->ownedProductLists()->get();
-            $shared = $user->sharedProductLists()->get();
-            $all = $owned->concat($shared)->unique('id')->values();
-            $active = $all->firstWhere('id', $activeListId);
-            return response()->json([
-                'active' => $active,
-                'all' => $all,
-            ]);
+    {
+        $user = Auth::user();
+        $owned = $user->ownedProductLists()->get();
+        $shared = $user->sharedProductLists()->get();
+        $all = $owned->concat($shared)->unique('id')->values();
+
+        // Ordine di priorità:
+        // 1. selected_list_id se accessibile
+        // 2. lista "Default" se accessibile
+        // 3. prima lista disponibile
+
+        $active = null;
+        if ($user->selected_list_id) {
+            $active = $all->firstWhere('id', $user->selected_list_id);
         }
+        if (!$active) {
+            $active = $all->firstWhere(fn($l) => strtolower($l->name) === 'default');
+        }
+        if (!$active) {
+            $active = $all->first();
+        }
+
+        // Aggiorna la sessione se necessario
+        if ($active) {
+            $request->session()->put('active_list_id', $active->id);
+        }
+
+        return response()->json([
+            'active' => $active,
+            'all' => $all,
+        ]);
+    }
     // Imposta la lista attiva nella sessione
     public function setActive(Request $request, ProductList $productList)
     {
         // Carica la relazione users per evitare problemi di lazy loading
         $productList->load('users');
-        $userId = Auth::id();
+        $user = Auth::user();
+        $userId = $user->id;
         $isOwner = $productList->owner_id == $userId;
         $isMember = $productList->users->contains($userId);
         if (!$isOwner && !$isMember) {
             abort(403, 'Non autorizzato');
         }
         $request->session()->put('active_list_id', $productList->id);
+        // Persisti la selezione anche dopo il logout
+        $user->selected_list_id = $productList->id;
+        $user->save();
         return redirect()->back()->with('success', 'Lista attiva aggiornata');
     }
 
@@ -45,10 +69,22 @@ class ProductListController extends Controller {
         $user = Auth::user();
         $owned = $user->ownedProductLists()->with(['users', 'products'])->get();
         $shared = $user->sharedProductLists()->with(['users', 'products', 'owner'])->get();
+        $all = $owned->concat($shared)->unique('id')->values();
+        $active = null;
+        if ($user->selected_list_id) {
+            $active = $all->firstWhere('id', $user->selected_list_id);
+        }
+        if (!$active) {
+            $active = $all->firstWhere(fn($l) => strtolower($l->name) === 'default');
+        }
+        if (!$active) {
+            $active = $all->first();
+        }
         $invitations = []; // Da implementare: inviti ricevuti
         return Inertia::render('ProductList/Index', [
             'owned' => $owned,
             'shared' => $shared,
+            'active_list' => $active,
             'invitations' => $invitations,
             'user' => $user,
         ]);

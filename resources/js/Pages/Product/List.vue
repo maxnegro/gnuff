@@ -63,7 +63,7 @@ import { usePage } from '@inertiajs/vue3';
 
 
 const page = usePage();
-const activeListId = computed(() => page.props.activeList ? page.props.activeList.id : null);
+const activeListId = computed(() => page.props.active_list ? page.props.active_list.id : null);
 
 const products = ref([]);
 const search = ref('');
