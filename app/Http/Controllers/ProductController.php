@@ -76,13 +76,16 @@
 
             if ($apiStatus === 1 && $apiProduct) {
                 // Prodotto trovato su OpenFoodFacts
-                $fields['name'] = $apiProduct['product_name'] ?? null;
-                // image_url può essere image_url o image_front_url
-                $fields['image_url'] = $apiProduct['image_url'] ?? $apiProduct['image_front_url'] ?? null;
-                // Aggiorna/crea in DB se serve
+                // Aggiorna solo i campi null/vuoti nel DB
+                $fields['name'] = $product && $product->name ? $product->name : ($apiProduct['product_name'] ?? null);
+                $fields['image_url'] = $product && $product->image_url ? $product->image_url : ($apiProduct['image_url'] ?? $apiProduct['image_front_url'] ?? null);
+                // Aggiorna solo se almeno un campo era vuoto e ora valorizzato
                 if ($product) {
-                    if ($product->name !== $fields['name'] || $product->image_url !== $fields['image_url']) {
-                        $product->update($fields);
+                    $toUpdate = [];
+                    if (!$product->name && $fields['name']) $toUpdate['name'] = $fields['name'];
+                    if (!$product->image_url && $fields['image_url']) $toUpdate['image_url'] = $fields['image_url'];
+                    if (!empty($toUpdate)) {
+                        $product->update($toUpdate);
                     }
                 } else {
                     $product = Product::create($fields);
@@ -154,7 +157,14 @@
                 'image' => 'nullable|url',
             ]);
 
-            $product = Product::where('barcode', $barcode)->firstOrFail();
+            $product = Product::where('barcode', $barcode)->first();
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Prodotto non trovato',
+                ], 404);
+            }
+
             $product->update($request->only(['name', 'image']));
             $product->refresh();
 
