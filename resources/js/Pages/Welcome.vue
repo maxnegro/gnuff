@@ -28,58 +28,19 @@ function handleImageError() {
 
 <template>
     <Head title="Welcome" />
-    <div class="bg-gray-50 text-black dark:bg-black dark:text-white">
-        
-        <div
-            class="relative flex min-h-screen flex-col items-center justify-center selection:bg-[#FF2D20] selection:text-white"
-        >
-            <div class="relative w-full max-w-2xl px-6 lg:max-w-7xl">
-                <header
-                    class="grid grid-cols-2 items-center gap-2 py-10 lg:grid-cols-3"
-                >
-                    <div class="flex lg:col-start-2 lg:justify-center">
-                        <img src="/img/icon-192.png" height="100">
-                    </div>
-                    <nav v-if="canLogin" class="-mx-3 flex flex-1 justify-end">
-                        <Link
-                            v-if="$page.props.auth.user"
-                            :href="route('dashboard')"
-                            class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white focus-visible:ring-white"
-                        >
-                            Dashboard
-                        </Link>
-
-                        <template v-else>
-                            <Link
-                                :href="route('login')"
-                                class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white focus-visible:ring-white"
-                            >
-                                Log in
-                            </Link>
-
-                            <Link
-                                v-if="canRegister"
-                                :href="route('register')"
-                                class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white focus-visible:ring-white"
-                            >
-                                Register
-                            </Link>
-                        </template>
-                    </nav>
-                </header>
-
-                <main class="mt-6">
-                    <div class="grid gap-6 lg:grid-cols-2 lg:gap-8">
-                    
-                    </div>
-                </main>
-
-                <footer
-                    class="py-16 text-center text-sm text-black dark:text-white"
-                >
-                Wonderful app by MN
-                </footer>
+    <div class="min-h-screen flex flex-col justify-between bg-white dark:bg-black text-black dark:text-white">
+        <main class="flex-1 flex flex-col items-center justify-center px-4 py-10">
+            <img src="/img/icon-192.png" alt="Logo" class="w-28 h-28 mb-6 rounded-xl bg-white dark:bg-gray-900" />
+            <h1 class="text-3xl font-bold mb-2 tracking-tight text-center">Benvenuto su Gnuff</h1>
+            <p class="text-base text-gray-700 dark:text-gray-300 mb-8 text-center max-w-xs">Gestisci, valuta e condividi le tue liste di prodotti in modo semplice e veloce.</p>
+            <div class="flex flex-col gap-4 w-full max-w-xs">
+                <Link v-if="canLogin && !$page.props.auth.user" :href="route('login')" class="w-full py-3 px-4 rounded-lg bg-green-500 text-white font-semibold text-lg shadow hover:bg-green-600 transition text-center">Accedi</Link>
+                <Link v-if="canRegister && !$page.props.auth.user" :href="route('register')" class="w-full py-3 px-4 rounded-lg bg-white text-green-600 font-semibold text-lg border border-green-400 shadow hover:bg-green-50 transition dark:bg-gray-900 dark:text-green-400 text-center">Registrati</Link>
+                <Link v-if="$page.props.auth.user" :href="route('dashboard')" class="w-full py-3 px-4 rounded-lg bg-green-700 text-white font-semibold text-lg shadow hover:bg-green-800 transition text-center">Vai alla Dashboard</Link>
             </div>
-        </div>
+        </main>
+        <footer class="py-6 text-center text-xs text-gray-500 dark:text-gray-400">
+            Wonderful app by MN
+        </footer>
     </div>
 </template>

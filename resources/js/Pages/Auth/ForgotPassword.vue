@@ -24,43 +24,33 @@ const submit = () => {
 <template>
     <GuestLayout>
         <Head title="Forgot Password" />
-
-        <div class="mb-4 text-sm text-gray-600">
-            Forgot your password? No problem. Just let us know your email
-            address and we will email you a password reset link that will allow
-            you to choose a new one.
+        <div class="mb-4 text-sm text-gray-600 dark:text-gray-300 text-center">
+            Password dimenticata? Inserisci la tua email e riceverai un link per reimpostarla.
         </div>
-
-        <div
-            v-if="status"
-            class="mb-4 text-sm font-medium text-green-600"
-        >
+        <div v-if="status" class="mb-4 text-sm font-medium text-green-600 text-center">
             {{ status }}
         </div>
-
-        <form @submit.prevent="submit">
+        <form @submit.prevent="submit" class="flex flex-col gap-4">
             <div>
                 <InputLabel for="email" value="Email" />
-
                 <TextInput
                     id="email"
                     type="email"
-                    class="mt-1 block w-full"
+                    class="mt-1 block w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white"
                     v-model="form.email"
                     required
                     autofocus
                     autocomplete="username"
                 />
-
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
-
-            <div class="mt-4 flex items-center justify-end">
+            <div>
                 <PrimaryButton
+                    class="w-full py-3 px-4 rounded-lg bg-green-500 text-white font-semibold text-lg shadow hover:bg-green-600 transition"
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
-                    Email Password Reset Link
+                    <span class="w-full block text-center">Invia link di reset</span>
                 </PrimaryButton>
             </div>
         </form>
