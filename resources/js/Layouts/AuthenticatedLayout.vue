@@ -63,17 +63,17 @@ const showingNavigationDropdown = ref(false);
 
                         <!-- Navigation Links -->
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                            <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
+                            <NavLink :href="route('dashboard')" :active="route().current('dashboard')" @click="showingNavigationDropdown = false">
                                 Dashboard
                             </NavLink>
-                            <NavLink :href="route('scanner')" :active="route().current('scanner')">
+                            <NavLink :href="route('scanner')" :active="route().current('scanner')" @click="showingNavigationDropdown = false">
                                 Scanner
                             </NavLink>
-                            <NavLink :href="route('product.list')" :active="route().current('product.list')">
+                            <NavLink :href="route('product.list')" :active="route().current('product.list')" @click="showingNavigationDropdown = false">
                                 Prodotti
                             </NavLink>
 
-                            <NavLink :href="route('lists.index')" :active="route().current('lists.index')">
+                            <NavLink :href="route('lists.index')" :active="route().current('lists.index')" @click="showingNavigationDropdown = false">
                                 Liste
                             </NavLink>
 
@@ -144,16 +144,16 @@ const showingNavigationDropdown = ref(false);
                 hidden: !showingNavigationDropdown,
             }" class="sm:hidden">
                 <div class="space-y-1 pb-3 pt-2">
-                    <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
+                    <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')" @click="showingNavigationDropdown = false">
                         Dashboard
                     </ResponsiveNavLink>
-                    <ResponsiveNavLink :href="route('scanner')" :active="route().current('scanner')">
+                    <ResponsiveNavLink :href="route('scanner')" :active="route().current('scanner')" @click="showingNavigationDropdown = false">
                         Scanner
                     </ResponsiveNavLink>
-                    <ResponsiveNavLink :href="route('product.list')" :active="route().current('product.list')">
+                    <ResponsiveNavLink :href="route('product.list')" :active="route().current('product.list')" @click="showingNavigationDropdown = false">
                         Prodotti
                     </ResponsiveNavLink>
-                    <ResponsiveNavLink :href="route('lists.index')" :active="route().current('lists.index')">
+                    <ResponsiveNavLink :href="route('lists.index')" :active="route().current('lists.index')" @click="showingNavigationDropdown = false">
                         Liste
                     </ResponsiveNavLink>
                 </div>
