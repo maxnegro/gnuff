@@ -139,7 +139,12 @@ onMounted(() => {
                         <div>
                           <h2 class="text-lg font-semibold">{{ rating.product.name }}</h2>
                           <p class="text-2xl">{{ emojiMap[rating.rating] }} ({{ rating.rating }})</p>
-                          <p class="text-xs">Valutato il {{ new Date(rating.updated_at).toLocaleString() }} in {{ rating.product_list.name }}</p>
+                          <p class="text-xs">
+                            Valutato il {{ new Date(rating.updated_at).toLocaleString() }}
+                            <span v-if="rating.product_list && rating.product_list.name">
+                              in {{ rating.product_list.name }}
+                            </span>
+                          </p>
                         </div>
                       </div>
                     </li>

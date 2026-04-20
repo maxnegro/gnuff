@@ -1,33 +1,33 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import { ref, computed } from 'vue';
+import { usePage, router } from '@inertiajs/vue3';
 
-const activeList = ref(null)
-const activeListId = ref(null)
-const allLists = ref([])
+const page = usePage();
+const allLists = computed(() => {
+    // Unifica owned e shared come in ProductList/Index.vue
+    const owned = page.props.owned || [];
+    const shared = page.props.shared || [];
+    const all = [...owned, ...shared];
+    const seen = new Set();
+    return all.filter(l => {
+        if (seen.has(l.id)) return false;
+        seen.add(l.id);
+        return true;
+    });
+});
+const activeList = computed(() => page.props.active_list || null);
+const activeListId = ref(activeList.value ? activeList.value.id : null);
 
-async function fetchActiveAndAllLists() {
-    try {
-        const res = await axios.get('/lists/active-and-all')
-        activeList.value = res.data.active
-        allLists.value = res.data.all
-        activeListId.value = res.data.active ? res.data.active.id : null
-    } catch (e) {
-        activeList.value = null
-        allLists.value = []
-        activeListId.value = null
-    }
-}
-
+// Aggiorna la lista attiva lato server e aggiorna la pagina
 async function changeActiveList(listId) {
-    await axios.post(`/lists/${listId}/active`)
-    await fetchActiveAndAllLists()
-    // opzionale: window.location.reload() per forzare reload se serve ovunque
+    router.post(`/lists/${listId}/active`, {}, {
+        preserveScroll: true,
+        onSuccess: () => {
+            // Inertia aggiornerà le props, quindi aggiorniamo anche il v-model
+            activeListId.value = listId;
+        }
+    });
 }
-
-onMounted(() => {
-    fetchActiveAndAllLists()
-})
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
@@ -171,6 +171,7 @@ const showingNavigationDropdown = ref(false);
                 </div>
             </div>
         </nav>
+        
         <!-- Barra selezione lista attiva -->
         <div class="w-full flex justify-center bg-white dark:bg-zinc-900 border-b border-gray-200">
             <div class="flex items-center gap-2 px-4 py-2">
@@ -184,7 +185,6 @@ const showingNavigationDropdown = ref(false);
                         {{ list.name }}
                     </option>
                 </select>
-                <span v-if="activeList" class="ml-2 text-xs text-gray-500">({{ activeList.name }})</span>
             </div>
         </div>
 

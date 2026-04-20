@@ -34,6 +34,16 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            // Props globali per tutte le pagine
+            'owned' => fn () => $request->user()
+                ? $request->user()->ownedProductLists()->with(['users', 'products'])->get()
+                : [],
+            'shared' => fn () => $request->user()
+                ? $request->user()->sharedProductLists()->with(['users', 'products', 'owner'])->get()
+                : [],
+            'active_list' => fn () => $request->user() && $request->session()->get('active_list_id')
+                ? ($request->user()->ownedProductLists->concat($request->user()->sharedProductLists)->firstWhere('id', $request->session()->get('active_list_id')))
+                : null,
         ];
     }
 }
