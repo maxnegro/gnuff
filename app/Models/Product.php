@@ -42,10 +42,6 @@ class Product extends Model
         if (!$this->validate()) {
             throw new ValidationException($this->validator);
         }
-        // Rimuovi la proprietà validator prima del salvataggio
-        $attributes = $this->getAttributes();
-        unset($attributes['validator']);
-        $this->setRawAttributes($attributes);
         return parent::save($options);
     }
 

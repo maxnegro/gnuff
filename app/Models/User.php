@@ -33,10 +33,11 @@ class User extends Authenticatable
         });
         static::created(function ($user) {
             // Crea una lista di default per ogni nuovo utente
-            \App\Models\ProductList::create([
+            $list = \App\Models\ProductList::create([
                 'name' => 'Lista di default',
                 'owner_id' => $user->id,
             ]);
+            $list->users()->attach($user->id);
         });
     }
 
@@ -100,10 +101,6 @@ class User extends Authenticatable
         if (!$this->exists && !$this->validate()) {
             throw new ValidationException($this->validator);
         }
-        // Rimuovi la proprietà validator prima del salvataggio
-        $attributes = $this->getAttributes();
-        unset($attributes['validator']);
-        $this->setRawAttributes($attributes);
         return parent::save($options);
     }
 

@@ -179,7 +179,7 @@ const showingNavigationDropdown = ref(false);
                 <select
                     v-model="activeListId"
                     @change="e => changeActiveList(e.target.value)"
-                    class="rounded border px-2 py-1 bg-gray-50 dark:bg-zinc-800 text-black dark:text-white"
+                    class="rounded border px-2 py-1 bg-gray-50 dark:bg-zinc-800 text-black dark:text-white min-w-[10rem] pr-8"
                 >
                     <option v-for="list in allLists" :key="list.id" :value="list.id">
                         {{ list.name }}
