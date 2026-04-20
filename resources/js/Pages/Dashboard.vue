@@ -1,4 +1,26 @@
 <script setup>
+
+const activeList = ref(null)
+const activeListId = ref(null)
+const allLists = ref([])
+
+async function fetchActiveAndAllLists() {
+  try {
+    const res = await axios.get('/lists/active-and-all')
+    activeList.value = res.data.active
+    allLists.value = res.data.all
+    activeListId.value = res.data.active ? res.data.active.id : null
+  } catch (e) {
+    activeList.value = null
+    allLists.value = []
+  }
+}
+
+async function changeActiveList(listId) {
+  await axios.post(`/lists/${listId}/active`)
+  await fetchActiveAndAllLists()
+  await fetchRatings()
+}
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Link } from '@inertiajs/vue3'
 
@@ -67,6 +89,7 @@ async function fetchRatings() {
 }
 
 onMounted(() => {
+  fetchActiveAndAllLists()
   fetchRatings()
 })
 

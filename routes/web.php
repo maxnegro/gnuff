@@ -17,6 +17,9 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
+
+        // API: lista attiva e tutte le liste dell'utente
+        Route::get('/lists/active-and-all', [\App\Http\Controllers\ProductListController::class, 'activeAndAll']);
     Route::get('/dashboard', fn() => Inertia::render('Dashboard'))->name('dashboard');
 
     // Scanner page
@@ -37,6 +40,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/lists/{productList}/invite', [\App\Http\Controllers\ProductListController::class, 'invite'])->name('lists.invite');
     Route::post('/lists/{productList}/accept', [\App\Http\Controllers\ProductListController::class, 'acceptInvite'])->name('lists.accept');
     Route::post('/lists/{productList}/decline', [\App\Http\Controllers\ProductListController::class, 'declineInvite'])->name('lists.decline');
+
+    // Imposta la lista attiva per la sessione
+    Route::post('/lists/{productList}/active', [\App\Http\Controllers\ProductListController::class, 'setActive'])->name('lists.setActive');
 
 
     // Save product name

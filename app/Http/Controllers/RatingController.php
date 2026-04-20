@@ -23,9 +23,13 @@ class RatingController extends Controller
             ]
         );
 
+        $activeListId = session('active_list_id');
+        if (!$activeListId) {
+            return response()->json(['message' => 'Nessuna lista attiva selezionata'], 422);
+        }
         $rating = Rating::updateOrCreate(
             [
-                'user_id' => Auth::id(),
+                'product_list_id' => $activeListId,
                 'product_id' => $product->id,
             ],
             [
@@ -38,7 +42,15 @@ class RatingController extends Controller
 
     public function userRatings()
     {
-        $ratings = auth()->user()->ratings()->with('product')->latest()->take(10)->get();
+        $activeListId = session('active_list_id');
+        if (!$activeListId) {
+            return response()->json([]); // Nessuna lista attiva selezionata
+        }
+        $ratings = \App\Models\Rating::where('product_list_id', $activeListId)
+            ->with('product')
+            ->latest()
+            ->take(10)
+            ->get();
 
         return response()->json($ratings);
     }
@@ -73,7 +85,12 @@ class RatingController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->input('per_page', 10);
-        $ratings = Rating::with(['user', 'product'])->latest()->paginate($perPage);
+        $activeListId = session('active_list_id');
+        $query = Rating::with('product');
+        if ($activeListId) {
+            $query->where('product_list_id', $activeListId);
+        }
+        $ratings = $query->latest()->paginate($perPage);
         return response()->json($ratings);
     }
 }

@@ -9,8 +9,37 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
-class ProductListController extends Controller
-{
+class ProductListController extends Controller {
+
+        // API: restituisce lista attiva e tutte le liste dell'utente
+        public function activeAndAll(Request $request)
+        {
+            $user = Auth::user();
+            $activeListId = $request->session()->get('active_list_id');
+            $owned = $user->ownedProductLists()->get();
+            $shared = $user->sharedProductLists()->get();
+            $all = $owned->concat($shared)->unique('id')->values();
+            $active = $all->firstWhere('id', $activeListId);
+            return response()->json([
+                'active' => $active,
+                'all' => $all,
+            ]);
+        }
+    // Imposta la lista attiva nella sessione
+    public function setActive(Request $request, ProductList $productList)
+    {
+        // Carica la relazione users per evitare problemi di lazy loading
+        $productList->load('users');
+        $userId = Auth::id();
+        $isOwner = $productList->owner_id == $userId;
+        $isMember = $productList->users->contains($userId);
+        if (!$isOwner && !$isMember) {
+            abort(403, 'Non autorizzato');
+        }
+        $request->session()->put('active_list_id', $productList->id);
+        return redirect()->back()->with('success', 'Lista attiva aggiornata');
+    }
+
     public function index()
     {
         $user = Auth::user();

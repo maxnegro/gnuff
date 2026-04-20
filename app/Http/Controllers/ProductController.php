@@ -78,9 +78,11 @@ class ProductController extends Controller
             $fields['image_url'] = $product->image_url;
         }
 
-        // Verifica se l’utente ha già inserito un rating
+
+        // Verifica se esiste già un rating per la lista attiva
+        $activeListId = session('active_list_id');
         $existingRating = $product->ratings()
-            ->where('user_id', $user->id)
+            ->where('product_list_id', $activeListId)
             ->first();
 
         return response()->json([
