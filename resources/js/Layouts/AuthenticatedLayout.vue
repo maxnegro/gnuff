@@ -48,16 +48,18 @@ const showingNavigationDropdown = ref(false);
 </script>
 
 <template>
-    <div>
-        <nav class="border-b border-gray-100 bg-white">
+    <div class="app-shell">
+        <nav class="app-nav sticky top-0 z-40">
             <!-- Primary Navigation Menu -->
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="app-frame">
                 <div class="flex h-16 justify-between">
                     <div class="flex">
                         <!-- Logo -->
                         <div class="flex shrink-0 items-center">
                             <Link :href="route('dashboard')">
-                                <ApplicationLogo class="block h-9 w-auto fill-current text-gray-800" />
+                                <div class="app-logo-badge">
+                                    <ApplicationLogo class="block h-9 w-auto fill-current text-primary-700 dark:text-primary-300" />
+                                </div>
                             </Link>
                         </div>
 
@@ -87,7 +89,7 @@ const showingNavigationDropdown = ref(false);
                                 <template #trigger>
                                     <span class="inline-flex rounded-md">
                                         <button type="button"
-                                            class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none">
+                                            class="app-button-secondary rounded-full px-3 py-2 text-sm font-medium leading-4">
                                             {{ $page.props.auth.user.name }}
 
                                             <svg class="-me-0.5 ms-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg"
@@ -118,7 +120,7 @@ const showingNavigationDropdown = ref(false);
                             showingNavigationDropdown =
                             !showingNavigationDropdown
                             "
-                            class="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none">
+                            class="inline-flex items-center justify-center rounded-xl p-2 text-secondary-500 transition duration-150 ease-in-out hover:bg-secondary-100/80 hover:text-secondary-700 focus:outline-none dark:hover:bg-secondary-800/70 dark:hover:text-secondary-200">
                             <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                                 <path :class="{
                                     hidden: showingNavigationDropdown,
@@ -142,7 +144,7 @@ const showingNavigationDropdown = ref(false);
             <div :class="{
                 block: showingNavigationDropdown,
                 hidden: !showingNavigationDropdown,
-            }" class="sm:hidden">
+            }" class="app-surface-soft mx-4 mb-4 rounded-3xl sm:hidden">
                 <div class="space-y-1 pb-3 pt-2">
                     <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')" @click="showingNavigationDropdown = false">
                         Dashboard
@@ -159,12 +161,12 @@ const showingNavigationDropdown = ref(false);
                 </div>
 
                 <!-- Responsive Settings Options -->
-                <div class="border-t border-gray-200 pb-1 pt-4">
+                <div class="border-t pb-1 pt-4" :style="{ borderColor: 'var(--app-border)' }">
                     <div class="px-4">
-                        <div class="text-base font-medium text-gray-800">
+                        <div class="text-base font-medium" :style="{ color: 'var(--app-text)' }">
                             {{ $page.props.auth.user.name }}
                         </div>
-                        <div class="text-sm font-medium text-gray-500">
+                        <div class="text-sm font-medium" :style="{ color: 'var(--app-text-soft)' }">
                             {{ $page.props.auth.user.email }}
                         </div>
                     </div>
@@ -182,29 +184,35 @@ const showingNavigationDropdown = ref(false);
         </nav>
 
         <!-- Barra selezione lista attiva -->
-        <div class="w-full flex justify-center bg-white dark:bg-zinc-900 border-b border-gray-200">
-            <div class="flex items-center gap-2 px-4 py-2">
-                <span class="font-semibold">Lista attiva:</span>
+        <div class="app-surface-soft mx-4 mt-4 rounded-3xl sm:mx-6 lg:mx-8">
+            <div class="app-frame flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary-600 dark:text-primary-300">Contesto</p>
+                    <p class="app-page-subtitle">Seleziona rapidamente la lista su cui salvare scan e valutazioni.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                <span class="text-sm font-semibold" :style="{ color: 'var(--app-text)' }">Lista attiva:</span>
                 <select v-model="activeListId" @change="e => changeActiveList(e.target.value)"
-                    class="rounded border px-2 py-1 bg-gray-50 dark:bg-zinc-800 text-black dark:text-white min-w-[10rem] pr-8">
+                    class="app-select min-w-[11rem] pr-8 text-sm">
                     <option v-for="list in allLists" :key="list.id" :value="list.id">
                         {{ list.name }}
                     </option>
                 </select>
+                </div>
             </div>
         </div>
 
 
-        <div class="min-h-screen bg-gray-100">
+        <div class="app-shell pb-10 pt-6">
             <!-- Page Heading -->
-            <header class="bg-white shadow" v-if="$slots.header">
-                <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            <header class="app-frame" v-if="$slots.header">
+                <div class="app-panel px-6 py-6 sm:px-8">
                     <slot name="header" />
                 </div>
             </header>
 
             <!-- Page Content -->
-            <main>
+            <main class="app-frame mt-6">
                 <slot />
             </main>
         </div>

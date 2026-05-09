@@ -29,25 +29,57 @@ function handleImageError() {
 <template>
 
     <Head title="Welcome" />
-    <div class="min-h-screen flex flex-col justify-between bg-white dark:bg-black text-black dark:text-white">
-        <main class="flex-1 flex flex-col items-center justify-center px-4 py-10">
-            <img src="/img/icon-192.png" alt="Logo" class="w-28 h-28 mb-6 rounded-xl bg-white dark:bg-gray-900" />
-            <h1 class="text-3xl font-bold mb-2 tracking-tight text-center">Benvenuto su Gnuff</h1>
-            <p class="text-base text-gray-700 dark:text-gray-300 mb-8 text-center max-w-xs">Gestisci, valuta e condividi
-                le tue liste di prodotti in modo semplice e veloce.</p>
-            <div class="flex flex-col md:flex-row gap-4 w-full max-w-xs">
-                <Link v-if="canLogin && !$page.props.auth.user" :href="route('login')"
-                    class="w-full md:flex-1 py-3 px-4 rounded-lg bg-primary-600 text-white font-semibold text-lg shadow hover:bg-primary-700 transition text-center">
-                    Accedi</Link>
-                <Link v-if="canRegister && !$page.props.auth.user" :href="route('register')"
-                    class="w-full md:flex-1 py-3 px-4 rounded-lg bg-primary-600 text-white font-semibold text-lg shadow hover:bg-primary-700 transition text-center">
-                    Registrati</Link>
-                <Link v-if="$page.props.auth.user" :href="route('dashboard')"
-                    class="w-full md:flex-1 py-3 px-4 rounded-lg bg-primary-600 text-white font-semibold text-lg shadow hover:bg-primary-700 transition text-center">
-                    Vai alla Dashboard</Link>
-            </div>
+    <div class="app-shell flex min-h-screen flex-col justify-between">
+        <main class="app-frame flex flex-1 items-center py-10 sm:py-16">
+            <section class="grid w-full gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+                <div class="space-y-6">
+                    <div class="inline-flex items-center gap-3 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-primary-700 dark:text-primary-200" :style="{ background: 'color-mix(in srgb, var(--app-surface) 82%, transparent)', border: '1px solid var(--app-border)' }">
+                        <span class="h-2.5 w-2.5 rounded-full bg-primary-500"></span>
+                        Scanner + liste condivise + rating
+                    </div>
+                    <div class="space-y-4">
+                        <h1 class="app-page-title max-w-2xl text-center lg:text-left">Benvenuto su Gnuff</h1>
+                        <p class="app-page-subtitle mx-auto max-w-xl text-center lg:mx-0 lg:text-left">Gestisci, valuta e condividi le tue liste di prodotti con un'interfaccia più leggibile, armonizzata e coerente con il tema di sistema.</p>
+                    </div>
+                    <div class="grid gap-3 text-sm sm:grid-cols-3">
+                        <div class="app-surface-soft rounded-3xl p-4">
+                            <p class="font-semibold">Scansione rapida</p>
+                            <p class="mt-1" :style="{ color: 'var(--app-text-soft)' }">Apri la fotocamera e collega il barcode alla lista attiva.</p>
+                        </div>
+                        <div class="app-surface-soft rounded-3xl p-4">
+                            <p class="font-semibold">Valutazione immediata</p>
+                            <p class="mt-1" :style="{ color: 'var(--app-text-soft)' }">Rivedi nome, immagine e rating nello stesso flusso.</p>
+                        </div>
+                        <div class="app-surface-soft rounded-3xl p-4">
+                            <p class="font-semibold">Collaborazione</p>
+                            <p class="mt-1" :style="{ color: 'var(--app-text-soft)' }">Condividi liste e mantieni allineate le preferenze di gruppo.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="app-panel mx-auto w-full max-w-md p-8 text-center lg:mx-0">
+                    <div class="flex flex-col items-center">
+                        <div class="app-logo-badge mb-6">
+                            <img src="/img/icon-192.png" alt="Logo" class="h-28 w-28 rounded-[28px] object-cover" />
+                        </div>
+                    </div>
+                    <h2 class="text-2xl font-semibold tracking-tight">Un unico punto di accesso</h2>
+                    <p class="mt-3 text-sm leading-6" :style="{ color: 'var(--app-text-soft)' }">Entra nel flusso di scansione, gestione liste e valutazioni con una UI più stabile su desktop e mobile.</p>
+                    <div class="mt-8 flex flex-col gap-3">
+                        <Link v-if="canLogin && !$page.props.auth.user" :href="route('login')"
+                            class="app-button-primary w-full text-center">
+                            Accedi</Link>
+                        <Link v-if="canRegister && !$page.props.auth.user" :href="route('register')"
+                            class="app-button-secondary w-full text-center">
+                            Registrati</Link>
+                        <Link v-if="$page.props.auth.user" :href="route('dashboard')"
+                            class="app-button-primary w-full text-center">
+                            Vai alla Dashboard</Link>
+                    </div>
+                </div>
+            </section>
         </main>
-        <footer class="py-6 text-center text-xs text-gray-500 dark:text-gray-400">
+        <footer class="app-frame py-6 text-center text-xs" :style="{ color: 'var(--app-text-soft)' }">
             Wonderful app by MN
         </footer>
     </div>

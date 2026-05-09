@@ -10,8 +10,11 @@
 ### 1. Analisi e Ottimizzazione UI
 - [ ] **Rivedere il layout principale**
   - [x] Test di copertura layout principale
+  - [x] Introdurre un design system globale base (palette, superfici, pulsanti, campi)
   - [ ] Applicare principi di design armonico (spaziatura, colori, tipografia)
+  - [x] Allineare layout principali e welcome page a un primo refactor visivo coerente
   - [ ] Prevedere per tutte le viste il supporto per tema light/dark di sistema
+  - [x] Attivare il supporto light/dark di sistema su layout principali e welcome page
   - [ ] Ottimizzare la responsività per dispositivi mobili
   - [ ] Aggiungere animazioni sottili per interazioni utente
 

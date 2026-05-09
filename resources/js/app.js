@@ -8,6 +8,22 @@ import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+const syncSystemTheme = () => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const applyColorScheme = (event) => {
+        document.documentElement.style.colorScheme = event.matches ? 'dark' : 'light';
+    };
+
+    applyColorScheme(media);
+    media.addEventListener('change', applyColorScheme);
+};
+
+syncSystemTheme();
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) =>
