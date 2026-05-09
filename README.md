@@ -76,11 +76,6 @@ chmod -R 775 public/storage
 chown -R www-data:www-data storage bootstrap/cache public/storage
 ```
 
-### 7. Avviare la queue (se configurata)
-```bash
-php artisan queue:work --daemon
-```
-
 ## API Utilizzate
 ### OpenFoodFacts
 - **Endpoint**: `https://world.openfoodfacts.org/api/v0/product/{barcode}.json`

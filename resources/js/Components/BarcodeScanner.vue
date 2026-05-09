@@ -10,8 +10,9 @@
   </template>
   
   <script setup>
-  import { ref } from 'vue';
   import { StreamBarcodeReader } from '@teckel/vue-barcode-reader';
+
+  const emit = defineEmits(['scanned']);
   
   const onLoaded = () => {
     console.log('Scanner pronto');
@@ -19,7 +20,7 @@
   
   const onDecode = (result) => {
     console.log('Codice scansionato:', result);
-    // Qui puoi emettere un evento al parent con il codice letto
+    emit('scanned', result);
   };
   </script>
   
