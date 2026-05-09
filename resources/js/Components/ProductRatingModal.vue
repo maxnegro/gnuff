@@ -183,50 +183,53 @@ async function submitManualForm() {
 }
 </script>
 <template>
-  <div v-if="show" class="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-    <div class="bg-white dark:bg-zinc-900 p-6 rounded shadow-lg w-full max-w-md relative">
-      <button @click="show = false" class="absolute top-2 right-2 text-gray-400 hover:text-black">✖</button>
-      <h3 class="text-lg font-bold mb-4">Aggiungi/modifica prodotto tramite EAN</h3>
+  <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-4 backdrop-blur-sm">
+    <div class="app-panel relative w-full max-w-lg p-6 sm:p-7">
+      <button @click="show = false" class="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full text-secondary-500 transition hover:bg-secondary-100 hover:text-secondary-700 dark:hover:bg-secondary-800/70 dark:hover:text-secondary-100">✖</button>
+      <div class="mb-5 pr-10">
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary-600 dark:text-primary-300">Valutazione prodotto</p>
+        <h3 class="mt-2 text-lg font-bold">Aggiungi/modifica prodotto tramite EAN</h3>
+      </div>
       <form v-if="manualStep === 'ean'" @submit.prevent="cercaEAN" class="flex flex-col gap-3">
         <input
           v-model="manualForm.barcode"
           type="text"
           placeholder="EAN (barcode)"
-          class="border rounded px-3 py-2 bg-white text-black dark:bg-zinc-800 dark:text-white dark:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          class="app-input"
           required
           autofocus
           ref="eanInputRef"
         />
-<button type="submit" :disabled="manualFormLoading || !manualForm.barcode" class="w-full bg-primary-600 text-white rounded-lg px-4 py-2.5 mt-2 hover:bg-primary-700 transition">
+<button type="submit" :disabled="manualFormLoading || !manualForm.barcode" class="app-button-primary mt-2 w-full disabled:cursor-not-allowed disabled:opacity-60">
   Cerca prodotto
 </button>
         <p v-if="manualFormError" class="text-red-500">{{ manualFormError }}</p>
       </form>
       <div v-else-if="manualStep === 'dati'" class="flex flex-col gap-3">
-        <div class="flex items-center gap-3 mb-2">
+        <div class="mb-2 flex items-center gap-3 rounded-3xl p-3" :style="{ background: 'color-mix(in srgb, var(--app-bg-muted) 100%, transparent)' }">
           <div class="flex flex-col items-center">
-            <img :src="manualForm.image_url || placeholder" alt="Immagine prodotto" class="w-16 h-16 object-cover rounded cursor-pointer border-2 border-transparent hover:border-indigo-400" @click="showImageInput = true; newImageUrl = manualForm.image_url || ''" />
-            <button type="button" @click="showImageInput = true; newImageUrl = manualForm.image_url || ''" class="mt-1 w-16 bg-white text-xs px-2 py-1 rounded shadow border border-gray-200 opacity-90 hover:opacity-100 text-center">Cambia</button>
+            <img :src="manualForm.image_url || placeholder" alt="Immagine prodotto" class="h-16 w-16 cursor-pointer rounded-2xl object-cover border-2 border-transparent hover:border-indigo-400" @click="showImageInput = true; newImageUrl = manualForm.image_url || ''" />
+            <button type="button" @click="showImageInput = true; newImageUrl = manualForm.image_url || ''" class="app-button-secondary mt-2 w-full px-3 py-2 text-xs text-center">Cambia</button>
           </div>
           <div>
             <div class="font-bold">{{ manualForm.name || 'Nome non disponibile' }}</div>
-            <div class="text-xs text-gray-500">EAN: {{ manualForm.barcode }}</div>
+            <div class="text-xs" :style="{ color: 'var(--app-text-soft)' }">EAN: {{ manualForm.barcode }}</div>
           </div>
         </div>
         <div v-if="showImageInput" class="flex flex-col gap-2 mb-2">
-          <input v-model="newImageUrl" type="url" placeholder="Nuovo URL immagine" class="border rounded px-3 py-2 bg-white text-black dark:bg-zinc-800 dark:text-white dark:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          <input v-model="newImageUrl" type="url" placeholder="Nuovo URL immagine" class="app-input" />
           <div class="flex gap-2">
-<button @click="updateImageUrl" type="button" class="flex-1 bg-primary-600 text-white rounded-lg px-3 py-2.5 hover:bg-primary-700 transition">Salva immagine</button>
-<button @click="showImageInput = false" type="button" class="flex-1 bg-secondary-300 text-secondary-700 rounded-lg px-3 py-2.5 hover:bg-secondary-400 transition">Annulla</button>
+<button @click="updateImageUrl" type="button" class="app-button-primary flex-1">Salva immagine</button>
+<button @click="showImageInput = false" type="button" class="app-button-secondary flex-1">Annulla</button>
           </div>
         </div>
         <form @submit.prevent="submitManualForm" class="flex flex-col gap-3">
-          <input v-model="manualForm.name" type="text" placeholder="Nome prodotto" class="border rounded px-3 py-2 bg-white text-black dark:bg-zinc-800 dark:text-white dark:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary-500" required />
-          <select v-model="manualForm.rating" class="border rounded px-3 py-2 bg-white text-black dark:bg-zinc-800 dark:text-white dark:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
+          <input v-model="manualForm.name" type="text" placeholder="Nome prodotto" class="app-input" required />
+          <select v-model="manualForm.rating" class="app-select" required>
             <option value="" disabled>Valutazione</option>
             <option v-for="opt in ratingOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
           </select>
-<button type="submit" :disabled="manualFormLoading" class="w-full bg-primary-600 text-white rounded-lg px-4 py-2.5 mt-2 hover:bg-primary-700 transition">
+<button type="submit" :disabled="manualFormLoading" class="app-button-primary mt-2 w-full disabled:cursor-not-allowed disabled:opacity-60">
   Salva valutazione
 </button>
           <p v-if="manualFormError" class="text-red-500">{{ manualFormError }}</p>
@@ -235,12 +238,12 @@ async function submitManualForm() {
       <div v-else-if="manualStep === 'errore'" class="flex flex-col gap-3">
         <p class="text-red-500">Prodotto non trovato su OpenFoodFacts. Inserisci i dati manualmente.</p>
         <form @submit.prevent="submitManualForm" class="flex flex-col gap-3">
-          <input v-model="manualForm.name" type="text" placeholder="Nome prodotto" class="border rounded px-3 py-2 bg-white text-black dark:bg-zinc-800 dark:text-white dark:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary-500" required />
-          <select v-model="manualForm.rating" class="border rounded px-3 py-2 bg-white text-black dark:bg-zinc-800 dark:text-white dark:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
+          <input v-model="manualForm.name" type="text" placeholder="Nome prodotto" class="app-input" required />
+          <select v-model="manualForm.rating" class="app-select" required>
             <option value="" disabled>Valutazione</option>
             <option v-for="opt in ratingOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
           </select>
-<button type="submit" :disabled="manualFormLoading" class="w-full bg-primary-600 text-white rounded-lg px-4 py-2.5 mt-2 hover:bg-primary-700 transition">
+<button type="submit" :disabled="manualFormLoading" class="app-button-primary mt-2 w-full disabled:cursor-not-allowed disabled:opacity-60">
   Salva valutazione
 </button>
           <p v-if="manualFormError" class="text-red-500">{{ manualFormError }}</p>

@@ -13,8 +13,10 @@
   - [x] Introdurre un design system globale base (palette, superfici, pulsanti, campi)
   - [ ] Applicare principi di design armonico (spaziatura, colori, tipografia)
   - [x] Allineare layout principali e welcome page a un primo refactor visivo coerente
+  - [x] Allineare Scanner, Prodotti, Liste e modale prodotto al design system base
   - [ ] Prevedere per tutte le viste il supporto per tema light/dark di sistema
   - [x] Attivare il supporto light/dark di sistema su layout principali e welcome page
+  - [x] Estendere il supporto light/dark alle viste applicative principali
   - [ ] Ottimizzare la responsività per dispositivi mobili
   - [ ] Aggiungere animazioni sottili per interazioni utente
 

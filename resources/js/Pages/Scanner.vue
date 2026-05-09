@@ -1,33 +1,53 @@
 <template>
-  <div class="bg-gray-50 text-black dark:bg-black dark:text-white">
-    <div class="relative flex min-h-screen flex-col items-center justify-top selection:bg-[#FF2D20] selection:text-white">
-      <div class="relative w-full max-w-2xl px-6 lg:max-w-7xl">
-        <header class="grid items-center">
-          <div class="flex justify-center">
-            <!-- Modale prodotto/valutazione riutilizzabile -->
-            <ProductRatingModal
-              v-model="showProductModal"
-              :initial-step="modalStep"
-              :initial-form="modalForm"
-              @saved="onModalSaved"
-            />
+  <div class="app-shell">
+    <div class="app-frame py-6 sm:py-8">
+      <!-- Modale prodotto/valutazione riutilizzabile -->
+      <ProductRatingModal
+        v-model="showProductModal"
+        :initial-step="modalStep"
+        :initial-form="modalForm"
+        @saved="onModalSaved"
+      />
 
-            <div class="p-6 space-y-4" style="min-height: 93vh;">
-              <h1 class="text-xl font-bold">Scanner prodotto</h1>
+      <section class="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+        <div class="space-y-4">
+          <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary-600 dark:text-primary-300">Scanner</p>
+          <h1 class="app-page-title">Scanner prodotto</h1>
+          <p class="app-page-subtitle">Inquadra un barcode, apri subito la scheda prodotto e completa la valutazione senza uscire dal flusso.</p>
+          <div class="grid gap-3 text-sm sm:grid-cols-2">
+            <div class="app-surface-soft rounded-3xl p-4">
+              <p class="font-semibold">Modalità guidata</p>
+              <p class="mt-1" :style="{ color: 'var(--app-text-soft)' }">Il reader mette in pausa la fotocamera quando trova un EAN supportato.</p>
+            </div>
+            <div class="app-surface-soft rounded-3xl p-4">
+              <p class="font-semibold">Compatibile col tema</p>
+              <p class="mt-1" :style="{ color: 'var(--app-text-soft)' }">Controlli, superfici e contrasto restano coerenti in light e dark mode.</p>
+            </div>
+          </div>
+        </div>
 
-              <StreamBarcodeReader v-if="!scannerPaused" :facing-mode="'environment'" @result="onResult" @error="onError" 
+        <div class="app-panel overflow-hidden p-5 sm:p-6">
+          <div class="rounded-[24px] border border-dashed border-primary-300/60 p-4 dark:border-primary-500/30" :style="{ background: 'color-mix(in srgb, var(--app-surface-strong) 82%, transparent)' }">
+            <div class="overflow-hidden rounded-[20px]" :style="{ minHeight: '24rem', background: 'color-mix(in srgb, var(--app-bg-muted) 100%, transparent)' }">
+              <StreamBarcodeReader v-if="!scannerPaused" :facing-mode="'environment'" @result="onResult" @error="onError"
                 :torch="torchEnabled" />
-
-              <div class="flex items-center gap-4">
-                <button @click="toggleTorch" class="btn">🔦 Torcia</button>
-                <button @click="togglePause" class="btn">
-                  {{ scannerPaused ? '▶️ Riprendi' : '⏸️ Pausa' }}
-                </button>
+              <div v-else class="flex min-h-[24rem] items-center justify-center px-6 text-center">
+                <div>
+                  <p class="text-lg font-semibold">Scanner in pausa</p>
+                  <p class="mt-2 text-sm" :style="{ color: 'var(--app-text-soft)' }">Riprendi la scansione dopo aver chiuso o salvato la modale prodotto.</p>
+                </div>
               </div>
             </div>
           </div>
-        </header>
-      </div>
+
+          <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <button @click="toggleTorch" class="btn app-button-secondary flex-1">🔦 Torcia</button>
+            <button @click="togglePause" class="btn app-button-primary flex-1">
+              {{ scannerPaused ? '▶️ Riprendi' : '⏸️ Pausa' }}
+            </button>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 </template>
@@ -47,8 +67,6 @@ defineOptions({
 
 const torchEnabled = ref(false);
 const scannerPaused = ref(false);
-const placeholder = '/img/gnuff-placeholder-192.png';
-
 // Stato per la modale prodotto/valutazione
 const showProductModal = ref(false);
 const modalStep = ref('ean');
@@ -99,9 +117,7 @@ function onModalSaved() {
 
 <style scoped>
 .btn {
-  background-color: #e2e8f0;
   padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
   font-weight: bold;
 }
 </style>

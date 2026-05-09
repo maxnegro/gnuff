@@ -1,25 +1,36 @@
 <template>
-  <div class="p-2 sm:p-4 max-w-lg mx-auto">
-    <h1 class="text-xl font-bold mb-4 text-center">Prodotti Registrati</h1>
-    <div class="flex flex-col gap-2 mb-4">
-      <input v-model="search" type="text" placeholder="Cerca per nome o barcode..." class="input input-bordered w-full" />
-      <button @click="toggleShowAll" class="mt-2 px-2 py-1 rounded bg-green-200 font-bold text-xs self-end">
-        {{ showAll ? 'solo con valutazione' : 'mostra tutti' }}
-      </button>
-    </div>
-    <div class="overflow-x-auto rounded shadow bg-white">
+  <div class="space-y-6">
+    <section class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary-600 dark:text-primary-300">Catalogo</p>
+        <h1 class="app-page-title mt-2 text-center lg:text-left">Prodotti Registrati</h1>
+        <p class="app-page-subtitle mt-3 text-center lg:text-left">Cerca, ordina e apri rapidamente la scheda prodotto per aggiornare valutazione e metadati.</p>
+      </div>
+      <div class="app-surface-soft rounded-3xl p-3 sm:min-w-[16rem]">
+        <button @click="toggleShowAll" class="app-button-secondary w-full text-xs font-semibold uppercase tracking-[0.18em]">
+          {{ showAll ? 'solo con valutazione' : 'mostra tutti' }}
+        </button>
+      </div>
+    </section>
+
+    <section class="app-panel p-4 sm:p-6">
+      <div class="mb-5 flex flex-col gap-3">
+        <input v-model="search" type="text" placeholder="Cerca per nome o barcode..." class="app-input w-full" />
+      </div>
+
+      <div class="overflow-x-auto rounded-[24px] border" :style="{ borderColor: 'var(--app-border)', background: 'color-mix(in srgb, var(--app-surface-strong) 90%, transparent)' }">
       <table class="min-w-full text-sm">
         <thead>
           <tr class="bg-gray-100">
-            <th v-for="field in tableFields" :key="field" class="py-2 px-2 text-left cursor-pointer select-none"
+            <th v-for="field in tableFields" :key="field" class="px-3 py-3 text-left cursor-pointer select-none text-xs font-semibold uppercase tracking-[0.18em]"
                 @click="sortableFields.includes(field) && sortBy(field)"
-                :class="sortableFields.includes(field) ? 'hover:bg-blue-100' : ''">
+                :class="sortableFields.includes(field) ? 'hover:bg-primary-50 dark:hover:bg-slate-800/80' : ''">
               {{ fieldLabels[field] }}
               <span v-if="sort.field === field">
                 {{ sort.direction === 'asc' ? '▲' : '▼' }}
               </span>
             </th>
-            <th class="py-2 px-2 text-left cursor-pointer select-none hover:bg-blue-100"
+            <th class="px-3 py-3 text-left cursor-pointer select-none text-xs font-semibold uppercase tracking-[0.18em] hover:bg-primary-50 dark:hover:bg-slate-800/80"
                 @click="sortBy('rating')">
               Valore
               <span v-if="sort.field === 'rating'">
@@ -29,13 +40,13 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="product in filteredProducts" :key="product.id" class="border-b hover:bg-blue-50 cursor-pointer" @click="openEditModal(product)">
-            <td class="py-2 px-2">{{ product.name }}</td>
-            <td class="py-2 px-2 font-mono">{{ product.barcode }}</td>
-            <td class="py-2 px-2">
-              <img :src="product.image_url || placeholder" @error="e => e.target.src = placeholder" alt="img" class="w-12 h-12 object-cover rounded" />
+          <tr v-for="product in filteredProducts" :key="product.id" class="cursor-pointer border-b transition hover:bg-primary-50/70 dark:hover:bg-slate-800/70" :style="{ borderColor: 'var(--app-border)' }" @click="openEditModal(product)">
+            <td class="px-3 py-3 font-medium">{{ product.name }}</td>
+            <td class="px-3 py-3 font-mono text-xs sm:text-sm">{{ product.barcode }}</td>
+            <td class="px-3 py-3">
+              <img :src="product.image_url || placeholder" @error="e => e.target.src = placeholder" alt="img" class="h-12 w-12 rounded-2xl object-cover" />
             </td>
-            <td class="py-2 px-3 whitespace-nowrap">
+            <td class="px-3 py-3 whitespace-nowrap">
               <span class="text-xl">{{ ratingEmojis[ratings[product.id]] || '' }}</span>
               <span v-if="ratings[product.id]"> ({{ ratings[product.id] }})</span>
             </td>
@@ -48,8 +59,9 @@
             />
         </tbody>
       </table>
-      <div v-if="filteredProducts.length === 0" class="text-center text-gray-400 py-8">Nessun prodotto trovato.</div>
-    </div>
+      </div>
+      <div v-if="filteredProducts.length === 0" class="py-10 text-center" :style="{ color: 'var(--app-text-soft)' }">Nessun prodotto trovato.</div>
+    </section>
   </div>
 </template>
 
@@ -97,9 +109,6 @@ const showAll = ref(false); // default: solo con valutazione
 const tableFields = ['name', 'barcode', 'image_url'];
 const sortableFields = ['name', 'barcode'];
 const fieldLabels = { name: 'Nome', barcode: 'Barcode', image_url: 'Immagine' };
-const ratingOptions = ['gnuf', 'ok', 'meh', 'bleah'];
-
-
 const fetchProducts = async () => {
   // console.log('fetchProducts chiamata, activeListId:', activeListId.value);
   if (!activeListId.value) {
@@ -178,13 +187,6 @@ function sortBy(field) {
   }
 }
 
-function sortButtonClass(field) {
-  return [
-    'px-2 py-1 rounded',
-    sort.value.field === field ? 'bg-blue-200 font-bold' : 'bg-gray-200',
-  ];
-}
-
 async function rateProduct(product) {
   const value = ratings.value[product.id];
   if (!value) return;
@@ -202,34 +204,9 @@ fetchProducts();
 </script>
 
 <style scoped>
-/* Migliora aspetto input e select */
-.input {
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  padding: 0.5rem;
-}
-.select {
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  padding: 0.25rem 1.5rem 0.25rem 0.5rem;
-  min-width: 80px;
-  font-size: 1rem;
-  font-family: inherit;
-  background-color: #fff;
-  appearance: none;
-  background-image: url('data:image/svg+xml;utf8,<svg fill="gray" height="16" viewBox="0 0 20 20" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M7.293 7.293a1 1 0 011.414 0L10 8.586l1.293-1.293a1 1 0 111.414 1.414l-2 2a1 1 0 01-1.414 0l-2-2a1 1 0 010-1.414z"/></svg>');
-  background-repeat: no-repeat;
-  background-position: right 0.5rem center;
-  background-size: 1rem;
-}
-/* Fix per select su Safari/iOS */
-select.select::-ms-expand {
-  display: none;
-}
 @media (max-width: 640px) {
   table, thead, tbody, th, td, tr { display: block; }
   th, td { padding: 0.5rem 0.25rem; }
-  tr { margin-bottom: 1rem; border-bottom: 1px solid #eee; }
-  th { background: #f3f4f6; }
+  tr { margin-bottom: 1rem; }
 }
 </style>
