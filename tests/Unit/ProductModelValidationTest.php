@@ -28,4 +28,11 @@ class ProductModelValidationTest extends TestCase
         $product = Product::factory()->make(['image_url' => 'invalid-url']);
         $product->save();
     }  
+
+    public function test_image_url_can_be_local_storage_path(): void
+    {
+        $product = Product::factory()->make(['image_url' => '/storage/products/test-local.jpg']);
+
+        $this->assertTrue($product->save());
+    }
 }

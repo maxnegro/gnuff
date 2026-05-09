@@ -22,7 +22,25 @@ class Product extends Model
         return [
             'barcode' => 'required|string',
             'name' => 'required|string',
-            'image_url' => 'nullable|url',
+            'image_url' => [
+                'nullable',
+                'string',
+                function ($attribute, $value, $fail) {
+                    if ($value === null || $value === '') {
+                        return;
+                    }
+
+                    if (str_starts_with($value, '/storage/')) {
+                        return;
+                    }
+
+                    if (filter_var($value, FILTER_VALIDATE_URL)) {
+                        return;
+                    }
+
+                    $fail('The '.$attribute.' field must be a valid URL or a local /storage path.');
+                },
+            ],
         ];
     }
 

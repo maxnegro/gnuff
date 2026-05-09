@@ -85,3 +85,46 @@
 - Utilizzare `./vendor/bin/sail` per eseguire comandi Laravel  
 - Verificare sempre le modifiche con `./vendo/bin/sail npm run build` e `./vendor/bin/sail artisan migrate`  
 - Mantenere il codice conforme alle convenzioni Laravel e Inertia.js
+
+---
+
+## Piano Refactor: Cache Locale Immagini Prodotto
+
+### Obiettivo
+- Evitare il rendering di URL immagine esterni nel frontend.
+- Salvare localmente le immagini prodotto e servire solo URL locali (`/storage/...`).
+
+### Step 1: Introdurre un servizio di cache immagini
+- [X] Creare `ProductImageCacheService` che:
+  - [X] scarica un'immagine remota valida
+  - [X] salva su disco `public` (es. `products/{barcode}.{ext}`)
+  - [X] restituisce URL locale pubblico
+  - [X] gestisce fallback sicuro (ritorna `null` se download/validazione fallisce)
+- [X] Test:
+  - [X] Unit test servizio: download OK, URL non valido, errore HTTP, estensione fallback
+
+### Step 2: Applicare la cache nel backend prodotto
+- [X] Integrare il servizio nei metodi `show`, `store`, `update` di `ProductController`:
+  - [X] quando arriva un `image_url` remoto, cache locale + persistenza URL locale
+  - [X] se `image_url` è vuoto, mantenere comportamento di rimozione (`null`)
+  - [X] garantire compatibilità con il payload esistente (`image_url`)
+- [X] Test:
+  - [X] Feature test `PUT /product/{barcode}` con URL remoto -> salva URL locale
+  - [X] Feature test `POST /product` con URL remoto -> salva URL locale
+  - [X] Feature test flusso `GET /product/{barcode}` da OpenFoodFacts -> restituisce URL locale
+
+### Step 3: Ridurre esposizione a URL esterni lato UI
+- [X] Verificare che i principali endpoint usati dalla UI restituiscano URL locali.
+- [X] Aggiornare solo i punti necessari per mantenere coerenza del form (`ProductRatingModal.vue`).
+- [X] Test:
+  - [X] estendere test Feature/API esistenti sui flussi form (salva immagine + salva valutazione)
+
+### Step 4: Hardening e regressioni
+- [X] Gestire casi limite (host non raggiungibile, MIME non immagine, URL malformato)
+- [X] Eseguire test mirati e poi suite completa
+- [X] Confermare nessuna regressione su rating/prodotti
+
+### Criteri di accettazione
+- [X] Nessun nuovo prodotto/aggiornamento salva URL immagine esterno in DB
+- [X] I payload API usati dalla UI espongono immagini locali quando disponibili
+- [X] Suite test verde con casi specifici sulla cache immagini

@@ -125,15 +125,19 @@ async function updateImageUrl() {
   manualFormError.value = ''
   manualFormLoading.value = true
   try {
-    await axios.put(`/product/${manualForm.value.barcode}`, {
+    const response = await axios.put(`/product/${manualForm.value.barcode}`, {
       name: manualForm.value.name,
       image_url: newImageUrl.value === '' ? null : newImageUrl.value,
     })
-    manualForm.value.image_url = newImageUrl.value === '' ? null : newImageUrl.value
+    manualForm.value.image_url = response.data?.product?.image_url ?? null
     showImageInput.value = false
     newImageUrl.value = ''
   } catch (e) {
-    manualFormError.value = "Errore durante l'aggiornamento immagine."
+    if (e.response && e.response.data && (e.response.data.message || e.response.data.error)) {
+      manualFormError.value = e.response.data.message || e.response.data.error
+    } else {
+      manualFormError.value = "Errore durante l'aggiornamento immagine."
+    }
   } finally {
     manualFormLoading.value = false
   }

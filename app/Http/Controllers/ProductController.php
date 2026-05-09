@@ -4,10 +4,51 @@
     use Illuminate\Http\Request;
     use App\Models\Product;
     use App\Services\OpenFoodFactsService;
+    use App\Services\ProductImageCacheService;
     use Inertia\Inertia;
 
     class ProductController extends Controller
     {
+        private function imageUrlRules(): array
+        {
+            return [
+                'nullable',
+                'string',
+                function ($attribute, $value, $fail) {
+                    if ($value === null || $value === '') {
+                        return;
+                    }
+
+                    $path = parse_url((string) $value, PHP_URL_PATH);
+                    if (str_starts_with((string) $value, '/storage/') || str_starts_with((string) $path, '/storage/')) {
+                        return;
+                    }
+
+                    if (filter_var($value, FILTER_VALIDATE_URL)) {
+                        return;
+                    }
+
+                    $fail('Il campo immagine deve essere un URL valido o un percorso locale /storage/.');
+                },
+            ];
+        }
+
+        private function resolveImageUrlForPersistence(
+            ?string $incomingImageUrl,
+            string $barcode,
+            ProductImageCacheService $imageCacheService
+        ): ?string {
+            if ($incomingImageUrl === null || $incomingImageUrl === '') {
+                return null;
+            }
+
+            if ($imageCacheService->isLocalStorageUrl($incomingImageUrl)) {
+                return $imageCacheService->toStoragePath($incomingImageUrl);
+            }
+
+            return $imageCacheService->cacheRemoteImage($incomingImageUrl, $barcode);
+        }
+
         /**
          * Pagina elenco prodotti con props lista attiva e tutte le liste
          */
@@ -46,13 +87,22 @@
             return response()->json($products);
         }
 
-        public function show($barcode, OpenFoodFactsService $openFoodFactsService)
+        public function show($barcode, OpenFoodFactsService $openFoodFactsService, ProductImageCacheService $imageCacheService)
         {
             // Memorizza utente corrente
             $user = auth()->user();
 
             // Cerca prodotto nel DB
             $product = Product::where('barcode', $barcode)->first();
+
+            // Se il prodotto ha ancora URL esterno, prova a localizzarlo in cache.
+            if ($product && $product->image_url && !$imageCacheService->isLocalStorageUrl($product->image_url)) {
+                $cachedExistingImage = $imageCacheService->cacheRemoteImage($product->image_url, $barcode);
+                if ($cachedExistingImage) {
+                    $product->update(['image_url' => $cachedExistingImage]);
+                    $product->refresh();
+                }
+            }
 
             // Chiamata centralizzata tramite service
             $apiResult = $openFoodFactsService->getProductByBarcode($barcode);
@@ -77,8 +127,14 @@
             if ($apiStatus === 1 && $apiProduct) {
                 // Prodotto trovato su OpenFoodFacts
                 // Aggiorna solo i campi null/vuoti nel DB
+                $cachedApiImage = $imageCacheService->cacheRemoteImage(
+                    $apiProduct['image_url'] ?? $apiProduct['image_front_url'] ?? null,
+                    $barcode
+                );
                 $fields['name'] = $product && $product->name ? $product->name : ($apiProduct['product_name'] ?? null);
-                $fields['image_url'] = $product && $product->image_url ? $product->image_url : ($apiProduct['image_url'] ?? $apiProduct['image_front_url'] ?? null);
+                $fields['image_url'] = $product
+                    ? ($imageCacheService->toStoragePath($product->image_url) ?? null)
+                    : $cachedApiImage;
                 // Aggiorna solo se almeno un campo era vuoto e ora valorizzato
                 if ($product) {
                     $toUpdate = [];
@@ -107,7 +163,7 @@
             } else {
                 // Prodotto già in DB
                 $fields['name'] = $product->name;
-                $fields['image_url'] = $product->image_url;
+                $fields['image_url'] = $imageCacheService->toStoragePath($product->image_url) ?? null;
             }
 
             // Verifica se esiste già un rating per la lista attiva
@@ -122,19 +178,37 @@
             ]);
         }
 
-        public function store(Request $request)
+        public function store(Request $request, ProductImageCacheService $imageCacheService)
         {
-            $request->validate([
+            if ($request->input('image_url') === '') {
+                $request->merge(['image_url' => null]);
+            }
+
+            $validated = $request->validate([
                 'barcode' => 'required',
                 'name' => 'required|string|max:255',
+                'image_url' => $this->imageUrlRules(),
             ]);
 
-            $fields = [ 'name' => $request->name ];
-            if ($request->filled('image_url')) {
-                $fields['image_url'] = $request->image_url;
+            $fields = [ 'name' => $validated['name'] ];
+            if (array_key_exists('image_url', $validated) && $validated['image_url']) {
+                $localizedImageUrl = $this->resolveImageUrlForPersistence(
+                    $validated['image_url'],
+                    $validated['barcode'],
+                    $imageCacheService
+                );
+
+                if ($localizedImageUrl === null) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Impossibile scaricare e salvare localmente l\'immagine indicata.',
+                    ], 422);
+                }
+
+                $fields['image_url'] = $localizedImageUrl;
             }
             $product = Product::updateOrCreate(
-                [ 'barcode' => $request->barcode ],
+                [ 'barcode' => $validated['barcode'] ],
                 $fields
             );
 
@@ -150,7 +224,7 @@
             ]);
         }
 
-        public function update(Request $request, $barcode)
+        public function update(Request $request, $barcode, ProductImageCacheService $imageCacheService)
         {
             if ($request->input('image_url') === '') {
                 $request->merge(['image_url' => null]);
@@ -158,16 +232,35 @@
 
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'image_url' => 'nullable|url',
+                'image_url' => $this->imageUrlRules(),
             ]);
 
             $product = Product::where('barcode', $barcode)->first();
+            $resolvedImageUrl = null;
+
+            if (array_key_exists('image_url', $validated)) {
+                $resolvedImageUrl = $this->resolveImageUrlForPersistence(
+                    $validated['image_url'],
+                    $barcode,
+                    $imageCacheService
+                );
+
+                if ($validated['image_url'] && $resolvedImageUrl === null) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Impossibile scaricare e salvare localmente l\'immagine indicata.',
+                    ], 422);
+                }
+            } elseif ($product) {
+                $resolvedImageUrl = $product->image_url;
+            }
+
             if (!$product) {
                 // Se il prodotto non esiste, crealo
                 $product = Product::create([
                     'barcode' => $barcode,
                     'name' => $validated['name'],
-                    'image_url' => $validated['image_url'] ?? null,
+                    'image_url' => $resolvedImageUrl,
                 ]);
                 return response()->json([
                     'success' => true,
@@ -180,7 +273,7 @@
             // Aggiorna i campi esistenti
             $product->update([
                 'name' => $validated['name'],
-                'image_url' => $validated['image_url'] ?? null,
+                'image_url' => $resolvedImageUrl,
             ]);
             $product->refresh();
 

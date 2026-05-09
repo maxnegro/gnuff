@@ -29,6 +29,58 @@ Gnuff è un'applicazione Laravel 13 che permette di mantenere un database di pro
 - `./vendor/bin/sail npm run dev` – Compila le viste Vue in modalità sviluppo.
 - `./vendor/bin/sail npm run build` – Compila le viste Vue per produzione.
 
+## Deployment in Produzione
+
+Dopo il deploy dell'applicazione, eseguire le seguenti operazioni **in ordine**:
+
+### 1. Installare dipendenze (se non già fatto)
+```bash
+composer install --no-dev --optimize-autoloader
+npm install && npm run build
+```
+
+### 2. Configurare l'ambiente
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+Assicurarsi che `.env` contenga:
+- `APP_DEBUG=false`
+- `APP_ENV=production`
+- Configurazione corretta di database, mail, cache, etc.
+
+### 3. Eseguire migrazioni
+```bash
+php artisan migrate --force
+```
+
+### 4. **Creare il symlink per il storage (ESSENZIALE)**
+```bash
+php artisan storage:link
+```
+> **⚠️ CRITICO**: Questo comando collega `/public/storage` a `storage/app/public` ed è necessario per l'accesso alle immagini in cache dei prodotti. Senza questo symlink, le immagini scaricate dalla API OpenFoodFacts non verranno visualizzate.
+
+### 5. Ottimizzare la configurazione
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+### 6. Impostare i permessi su directory critiche
+```bash
+chmod -R 775 storage/logs
+chmod -R 775 storage/app
+chmod -R 775 bootstrap/cache
+chmod -R 775 public/storage
+chown -R www-data:www-data storage bootstrap/cache public/storage
+```
+
+### 7. Avviare la queue (se configurata)
+```bash
+php artisan queue:work --daemon
+```
+
 ## API Utilizzate
 ### OpenFoodFacts
 - **Endpoint**: `https://world.openfoodfacts.org/api/v0/product/{barcode}.json`
