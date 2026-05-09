@@ -33,14 +33,7 @@ function handleImageError() {
         <main class="app-frame flex flex-1 items-center py-10 sm:py-16">
             <section class="grid w-full gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
                 <div class="space-y-6">
-                    <div class="inline-flex items-center gap-3 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-primary-700 dark:text-primary-200" :style="{ background: 'color-mix(in srgb, var(--app-surface) 82%, transparent)', border: '1px solid var(--app-border)' }">
-                        <span class="h-2.5 w-2.5 rounded-full bg-primary-500"></span>
-                        Scanner + liste condivise + rating
-                    </div>
-                    <div class="space-y-4">
                         <h1 class="app-page-title max-w-2xl text-center lg:text-left">Benvenuto su Gnuff</h1>
-                        <p class="app-page-subtitle mx-auto max-w-xl text-center lg:mx-0 lg:text-left">Gestisci, valuta e condividi le tue liste di prodotti con un'interfaccia più leggibile, armonizzata e coerente con il tema di sistema.</p>
-                    </div>
                     <div class="grid gap-3 text-sm sm:grid-cols-3">
                         <div class="app-surface-soft rounded-3xl p-4">
                             <p class="font-semibold">Scansione rapida</p>

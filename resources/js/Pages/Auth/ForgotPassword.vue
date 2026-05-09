@@ -23,36 +23,22 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Forgot Password" />
-        <div class="mb-4 text-sm text-gray-600 dark:text-gray-300 text-center">
+        <Head title="Password dimenticata" />
+        <div class="mb-4 text-sm text-center" :style="{ color: 'var(--app-text-soft)' }">
             Password dimenticata? Inserisci la tua email e riceverai un link per reimpostarla.
         </div>
-        <div v-if="status" class="mb-4 text-sm font-medium text-green-600 text-center">
+        <div v-if="status" class="mb-4 rounded-2xl px-4 py-3 text-center text-sm font-medium text-primary-900 dark:text-primary-100" :style="{ background: 'color-mix(in srgb, var(--app-bg-accent) 100%, transparent)' }">
             {{ status }}
         </div>
-        <form @submit.prevent="submit" class="flex flex-col gap-4">
+        <form @submit.prevent="submit" class="space-y-5">
             <div>
                 <InputLabel for="email" value="Email" />
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white"
-                    v-model="form.email"
-                    required
-                    autofocus
-                    autocomplete="username"
-                />
+                <TextInput id="email" type="email" class="app-input mt-2" v-model="form.email" required autofocus autocomplete="username" />
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
-            <div>
-                <PrimaryButton
-                    class="w-full py-3 px-4 rounded-lg bg-green-500 text-white font-semibold text-lg shadow hover:bg-green-600 transition"
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    <span class="w-full block text-center">Invia link di reset</span>
-                </PrimaryButton>
-            </div>
+            <PrimaryButton class="w-full app-button-primary" :class="{ 'opacity-60': form.processing }" :disabled="form.processing">
+                Invia link di reset
+            </PrimaryButton>
         </form>
     </GuestLayout>
 </template>

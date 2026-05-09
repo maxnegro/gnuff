@@ -4,11 +4,9 @@
       {{ notification }}
     </div>
     <section class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
-      <div>
-        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary-600 dark:text-primary-300">Liste</p>
-        <h1 class="app-page-title mt-2">Le mie liste</h1>
-        <p class="app-page-subtitle mt-3">Crea, rinomina, condividi e gestisci i prodotti delle tue liste da un unico spazio coerente col resto dell'app.</p>
-      </div>
+          <div>
+            <h1 class="app-page-title">Le mie liste</h1>
+          </div>
       <div class="app-panel flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
       <input v-model="newListName" placeholder="Nuova lista..." class="app-input input input-bordered sm:min-w-[16rem]" />
       <button @click="createList" class="btn btn-primary app-button-primary">Crea</button>

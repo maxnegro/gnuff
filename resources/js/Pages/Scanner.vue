@@ -1,6 +1,5 @@
 <template>
-  <div class="app-shell">
-    <div class="app-frame py-6 sm:py-8">
+  <div class="py-2 sm:py-4">
       <!-- Modale prodotto/valutazione riutilizzabile -->
       <ProductRatingModal
         v-model="showProductModal"
@@ -9,23 +8,7 @@
         @saved="onModalSaved"
       />
 
-      <section class="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
-        <div class="space-y-4">
-          <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary-600 dark:text-primary-300">Scanner</p>
-          <h1 class="app-page-title">Scanner prodotto</h1>
-          <p class="app-page-subtitle">Inquadra un barcode, apri subito la scheda prodotto e completa la valutazione senza uscire dal flusso.</p>
-          <div class="grid gap-3 text-sm sm:grid-cols-2">
-            <div class="app-surface-soft rounded-3xl p-4">
-              <p class="font-semibold">Modalità guidata</p>
-              <p class="mt-1" :style="{ color: 'var(--app-text-soft)' }">Il reader mette in pausa la fotocamera quando trova un EAN supportato.</p>
-            </div>
-            <div class="app-surface-soft rounded-3xl p-4">
-              <p class="font-semibold">Compatibile col tema</p>
-              <p class="mt-1" :style="{ color: 'var(--app-text-soft)' }">Controlli, superfici e contrasto restano coerenti in light e dark mode.</p>
-            </div>
-          </div>
-        </div>
-
+      <section>
         <div class="app-panel overflow-hidden p-5 sm:p-6">
           <div class="rounded-[24px] border border-dashed border-primary-300/60 p-4 dark:border-primary-500/30" :style="{ background: 'color-mix(in srgb, var(--app-surface-strong) 82%, transparent)' }">
             <div class="overflow-hidden rounded-[20px]" :style="{ minHeight: '24rem', background: 'color-mix(in srgb, var(--app-bg-muted) 100%, transparent)' }">
@@ -48,7 +31,6 @@
           </div>
         </div>
       </section>
-    </div>
   </div>
 </template>
 

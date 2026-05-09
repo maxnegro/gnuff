@@ -41,65 +41,33 @@ const closeModal = () => {
 <template>
     <section class="space-y-6">
         <header>
-            <h2 class="text-lg font-medium text-gray-900">
-                Delete Account
+            <h2 class="text-lg font-semibold" :style="{ color: 'var(--app-text)' }">
+                Elimina Account
             </h2>
-
-            <p class="mt-1 text-sm text-gray-600">
-                Once your account is deleted, all of its resources and data will
-                be permanently deleted. Before deleting your account, please
-                download any data or information that you wish to retain.
+            <p class="mt-2 text-sm" :style="{ color: 'var(--app-text-soft)' }">
+                Una volta eliminato il tuo account, tutte le risorse e i dati verranno eliminati definitivamente. Prima di eliminare il tuo account, scarica tutti i dati che desideri conservare.
             </p>
         </header>
 
-        <DangerButton @click="confirmUserDeletion">Delete Account</DangerButton>
+        <DangerButton @click="confirmUserDeletion">Elimina Account</DangerButton>
 
         <Modal :show="confirmingUserDeletion" @close="closeModal">
             <div class="p-6">
-                <h2
-                    class="text-lg font-medium text-gray-900"
-                >
-                    Are you sure you want to delete your account?
+                <h2 class="text-lg font-semibold" :style="{ color: 'var(--app-text)' }">
+                    Sei sicuro di voler eliminare il tuo account?
                 </h2>
-
-                <p class="mt-1 text-sm text-gray-600">
-                    Once your account is deleted, all of its resources and data
-                    will be permanently deleted. Please enter your password to
-                    confirm you would like to permanently delete your account.
+                <p class="mt-2 text-sm" :style="{ color: 'var(--app-text-soft)' }">
+                    Una volta eliminato il tuo account, tutte le risorse e i dati verranno eliminati definitivamente. Inserisci la tua password per confermare.
                 </p>
-
                 <div class="mt-6">
-                    <InputLabel
-                        for="password"
-                        value="Password"
-                        class="sr-only"
-                    />
-
-                    <TextInput
-                        id="password"
-                        ref="passwordInput"
-                        v-model="form.password"
-                        type="password"
-                        class="mt-1 block w-3/4"
-                        placeholder="Password"
-                        @keyup.enter="deleteUser"
-                    />
-
+                    <InputLabel for="password" value="Password" class="sr-only" />
+                    <TextInput id="password" ref="passwordInput" v-model="form.password" type="password" class="app-input w-full" placeholder="Password" @keyup.enter="deleteUser" />
                     <InputError :message="form.errors.password" class="mt-2" />
                 </div>
-
-                <div class="mt-6 flex justify-end">
-                    <SecondaryButton @click="closeModal">
-                        Cancel
-                    </SecondaryButton>
-
-                    <DangerButton
-                        class="ms-3"
-                        :class="{ 'opacity-25': form.processing }"
-                        :disabled="form.processing"
-                        @click="deleteUser"
-                    >
-                        Delete Account
+                <div class="mt-6 flex justify-end gap-3">
+                    <SecondaryButton @click="closeModal">Annulla</SecondaryButton>
+                    <DangerButton :class="{ 'opacity-60': form.processing }" :disabled="form.processing" @click="deleteUser">
+                        Elimina Account
                     </DangerButton>
                 </div>
             </div>

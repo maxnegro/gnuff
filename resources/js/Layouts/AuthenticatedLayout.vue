@@ -184,12 +184,9 @@ const showingNavigationDropdown = ref(false);
         </nav>
 
         <!-- Barra selezione lista attiva -->
-        <div class="app-surface-soft mx-4 mt-4 rounded-3xl sm:mx-6 lg:mx-8">
-            <div class="app-frame flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary-600 dark:text-primary-300">Contesto</p>
-                    <p class="app-page-subtitle">Seleziona rapidamente la lista su cui salvare scan e valutazioni.</p>
-                </div>
+        <div class="app-frame mt-4">
+            <div class="app-surface-soft rounded-3xl px-6 py-4 sm:px-8">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
                 <div class="flex items-center gap-3">
                 <span class="text-sm font-semibold" :style="{ color: 'var(--app-text)' }">Lista attiva:</span>
                 <select v-model="activeListId" @change="e => changeActiveList(e.target.value)"
@@ -200,6 +197,7 @@ const showingNavigationDropdown = ref(false);
                 </select>
                 </div>
             </div>
+        </div>
         </div>
 
 

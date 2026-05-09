@@ -23,38 +23,21 @@ const verificationLinkSent = computed(
 
 <template>
     <GuestLayout>
-        <Head title="Email Verification" />
-
-        <div class="mb-4 text-sm text-gray-600">
-            Thanks for signing up! Before getting started, could you verify your
-            email address by clicking on the link we just emailed to you? If you
-            didn't receive the email, we will gladly send you another.
+        <Head title="Verifica Email" />
+        <div class="mb-4 text-sm text-center" :style="{ color: 'var(--app-text-soft)' }">
+            Grazie per la registrazione! Per continuare, verifica il tuo indirizzo email cliccando sul link che ti abbiamo inviato. Se non hai ricevuto l'email, te ne invieremo un'altra.
         </div>
-
-        <div
-            class="mb-4 text-sm font-medium text-green-600"
-            v-if="verificationLinkSent"
-        >
-            A new verification link has been sent to the email address you
-            provided during registration.
+        <div v-if="verificationLinkSent" class="mb-4 rounded-2xl px-4 py-3 text-center text-sm font-medium text-primary-900 dark:text-primary-100" :style="{ background: 'color-mix(in srgb, var(--app-bg-accent) 100%, transparent)' }">
+            Un nuovo link di verifica è stato inviato all'indirizzo email fornito.
         </div>
-
-        <form @submit.prevent="submit">
-            <div class="mt-4 flex items-center justify-between">
-                <PrimaryButton
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Resend Verification Email
-                </PrimaryButton>
-
-                <Link
-                    :href="route('logout')"
-                    method="post"
-                    as="button"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    >Log Out</Link
-                >
+        <form @submit.prevent="submit" class="space-y-4">
+            <PrimaryButton class="w-full app-button-primary" :class="{ 'opacity-60': form.processing }" :disabled="form.processing">
+                Rinvia Email di Verifica
+            </PrimaryButton>
+            <div class="text-center">
+                <Link :href="route('logout')" method="post" as="button" class="text-sm font-medium transition hover:opacity-75" :style="{ color: 'var(--app-text-soft)' }">
+                    Esci
+                </Link>
             </div>
         </form>
     </GuestLayout>

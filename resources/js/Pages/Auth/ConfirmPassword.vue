@@ -19,37 +19,19 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Confirm Password" />
-
-        <div class="mb-4 text-sm text-gray-600">
-            This is a secure area of the application. Please confirm your
-            password before continuing.
+        <Head title="Conferma Password" />
+        <div class="mb-4 text-sm text-center" :style="{ color: 'var(--app-text-soft)' }">
+            Questa è un'area protetta dell'applicazione. Conferma la tua password prima di continuare.
         </div>
-
-        <form @submit.prevent="submit">
+        <form @submit.prevent="submit" class="space-y-5">
             <div>
                 <InputLabel for="password" value="Password" />
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password"
-                    required
-                    autocomplete="current-password"
-                    autofocus
-                />
+                <TextInput id="password" type="password" class="app-input mt-2" v-model="form.password" required autocomplete="current-password" autofocus />
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
-
-            <div class="mt-4 flex justify-end">
-                <PrimaryButton
-                    class="ms-4"
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Confirm
-                </PrimaryButton>
-            </div>
+            <PrimaryButton class="w-full app-button-primary" :class="{ 'opacity-60': form.processing }" :disabled="form.processing">
+                Conferma
+            </PrimaryButton>
         </form>
     </GuestLayout>
 </template>

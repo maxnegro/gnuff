@@ -31,17 +31,17 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Log in" />
-        <div v-if="status" class="mb-4 text-sm font-medium text-green-600 text-center">
+        <Head title="Accedi" />
+        <div v-if="status" class="mb-4 rounded-2xl px-4 py-3 text-center text-sm font-medium text-primary-900 dark:text-primary-100" :style="{ background: 'color-mix(in srgb, var(--app-bg-accent) 100%, transparent)' }">
             {{ status }}
         </div>
-        <form @submit.prevent="submit" class="flex flex-col gap-4">
+        <form @submit.prevent="submit" class="space-y-5">
             <div>
                 <InputLabel for="email" value="Email" />
                 <TextInput
                     id="email"
                     type="email"
-                    class="mt-1 block w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white"
+                    class="app-input mt-2"
                     v-model="form.email"
                     required
                     autofocus
@@ -54,37 +54,37 @@ const submit = () => {
                 <TextInput
                     id="password"
                     type="password"
-                    class="mt-1 block w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white"
+                    class="app-input mt-2"
                     v-model="form.password"
                     required
                     autocomplete="current-password"
                 />
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
-            <div class="flex items-center">
+            <div class="flex items-center gap-2">
                 <Checkbox name="remember" v-model:checked="form.remember" />
-                <span class="ms-2 text-sm text-gray-600 dark:text-gray-300">Ricordami</span>
+                <span class="text-sm" :style="{ color: 'var(--app-text-soft)' }">Ricordami</span>
             </div>
-            <div class="flex flex-col gap-2 mt-2">
+            <div class="space-y-3 pt-2">
                 <PrimaryButton
-                    class="w-full py-3 px-4 rounded-lg bg-green-500 text-white font-semibold text-lg shadow hover:bg-green-600 transition"
-                    :class="{ 'opacity-25': form.processing }"
+                    class="w-full app-button-primary"
+                    :class="{ 'opacity-60': form.processing }"
                     :disabled="form.processing"
                 >
-                    <span class="w-full block text-center">Accedi</span>
+                    Accedi
                 </PrimaryButton>
                 <Link
                     v-if="canResetPassword"
                     :href="route('password.request')"
-                    class="text-sm text-green-600 underline hover:text-green-800 text-center mt-2"
+                    class="block text-center text-sm font-medium transition hover:opacity-75" :style="{ color: 'var(--app-text-soft)' }"
                 >
                     Password dimenticata?
                 </Link>
             </div>
         </form>
-        <div class="mt-6 text-center">
-            <span class="text-sm text-gray-600 dark:text-gray-300">Non hai un account?</span>
-            <Link :href="route('register')" class="ml-2 text-green-600 underline hover:text-green-800">Registrati</Link>
+        <div class="mt-8 text-center text-sm" :style="{ color: 'var(--app-text-soft)' }">
+            Non hai un account?
+            <Link :href="route('register')" class="font-semibold text-primary-600 dark:text-primary-300 hover:underline">Registrati</Link>
         </div>
     </GuestLayout>
 </template>

@@ -1,11 +1,7 @@
 <template>
   <div class="space-y-6">
     <section class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
-      <div>
-        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary-600 dark:text-primary-300">Catalogo</p>
-        <h1 class="app-page-title mt-2 text-center lg:text-left">Prodotti Registrati</h1>
-        <p class="app-page-subtitle mt-3 text-center lg:text-left">Cerca, ordina e apri rapidamente la scheda prodotto per aggiornare valutazione e metadati.</p>
-      </div>
+      <div></div>
       <div class="app-surface-soft rounded-3xl p-3 sm:min-w-[16rem]">
         <button @click="toggleShowAll" class="app-button-secondary w-full text-xs font-semibold uppercase tracking-[0.18em]">
           {{ showAll ? 'solo con valutazione' : 'mostra tutti' }}

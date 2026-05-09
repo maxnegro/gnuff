@@ -205,15 +205,15 @@ async function submitManualForm() {
 </button>
         <p v-if="manualFormError" class="text-red-500">{{ manualFormError }}</p>
       </form>
-      <div v-else-if="manualStep === 'dati'" class="flex flex-col gap-3">
-        <div class="mb-2 flex items-center gap-3 rounded-3xl p-3" :style="{ background: 'color-mix(in srgb, var(--app-bg-muted) 100%, transparent)' }">
-          <div class="flex flex-col items-center">
-            <img :src="manualForm.image_url || placeholder" alt="Immagine prodotto" class="h-16 w-16 cursor-pointer rounded-2xl object-cover border-2 border-transparent hover:border-indigo-400" @click="showImageInput = true; newImageUrl = manualForm.image_url || ''" />
-            <button type="button" @click="showImageInput = true; newImageUrl = manualForm.image_url || ''" class="app-button-secondary mt-2 w-full px-3 py-2 text-xs text-center">Cambia</button>
+      <div v-else-if="manualStep === 'dati'" class="flex flex-col gap-4">
+        <div class="flex items-start gap-4 rounded-3xl p-4" :style="{ background: 'color-mix(in srgb, var(--app-bg-muted) 100%, transparent)' }">
+          <div class="flex flex-shrink-0 flex-col items-center">
+            <img :src="manualForm.image_url || placeholder" alt="Immagine prodotto" class="h-20 w-20 cursor-pointer rounded-2xl object-cover border-2 border-transparent hover:border-indigo-400" @click="showImageInput = true; newImageUrl = manualForm.image_url || ''" />
+            <button type="button" @click="showImageInput = true; newImageUrl = manualForm.image_url || ''" class="app-button-secondary mt-2 px-3 py-1.5 text-xs">Cambia</button>
           </div>
-          <div>
-            <div class="font-bold">{{ manualForm.name || 'Nome non disponibile' }}</div>
-            <div class="text-xs" :style="{ color: 'var(--app-text-soft)' }">EAN: {{ manualForm.barcode }}</div>
+          <div class="flex flex-col gap-1 overflow-hidden">
+            <div class="text-base font-bold leading-snug">{{ manualForm.name || 'Nome non disponibile' }}</div>
+            <div class="text-xs font-medium" :style="{ color: 'var(--app-text-soft)' }">EAN: {{ manualForm.barcode }}</div>
           </div>
         </div>
         <div v-if="showImageInput" class="flex flex-col gap-2 mb-2">
