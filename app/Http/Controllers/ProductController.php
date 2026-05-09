@@ -152,25 +152,43 @@
 
         public function update(Request $request, $barcode)
         {
-            $request->validate([
+            if ($request->input('image_url') === '') {
+                $request->merge(['image_url' => null]);
+            }
+
+            $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'image' => 'nullable|url',
+                'image_url' => 'nullable|url',
             ]);
 
             $product = Product::where('barcode', $barcode)->first();
             if (!$product) {
+                // Se il prodotto non esiste, crealo
+                $product = Product::create([
+                    'barcode' => $barcode,
+                    'name' => $validated['name'],
+                    'image_url' => $validated['image_url'] ?? null,
+                ]);
                 return response()->json([
-                    'success' => false,
-                    'error' => 'Prodotto non trovato',
-                ], 404);
+                    'success' => true,
+                    'created' => true,
+                    'product' => $product->toArray(),
+                    'message' => 'Prodotto creato con successo',
+                ]);
             }
 
-            $product->update($request->only(['name', 'image']));
+            // Aggiorna i campi esistenti
+            $product->update([
+                'name' => $validated['name'],
+                'image_url' => $validated['image_url'] ?? null,
+            ]);
             $product->refresh();
 
             return response()->json([
                 'success' => true,
+                'created' => false,
                 'product' => $product->toArray(),
+                'message' => 'Prodotto aggiornato con successo',
             ]);
         }
 

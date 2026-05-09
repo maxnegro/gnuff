@@ -127,13 +127,13 @@ async function updateImageUrl() {
   try {
     await axios.put(`/product/${manualForm.value.barcode}`, {
       name: manualForm.value.name,
-      image: newImageUrl.value,
+      image_url: newImageUrl.value === '' ? null : newImageUrl.value,
     })
-    manualForm.value.image_url = newImageUrl.value
+    manualForm.value.image_url = newImageUrl.value === '' ? null : newImageUrl.value
     showImageInput.value = false
     newImageUrl.value = ''
   } catch (e) {
-    manualFormError.value = 'Errore durante l\'aggiornamento immagine.'
+    manualFormError.value = "Errore durante l'aggiornamento immagine."
   } finally {
     manualFormLoading.value = false
   }
@@ -146,18 +146,16 @@ async function submitManualForm() {
     // Confronta con i dati originali dal DB
     const original = props.initialForm || {}
     const updates = {}
-    if (manualForm.value.name !== original.name) updates.name = manualForm.value.name
-    if (manualForm.value.image_url !== original.image_url) updates.image = manualForm.value.image_url || null
+    updates.name = manualForm.value.name
+    updates.image_url = manualForm.value.image_url === '' ? null : manualForm.value.image_url
     let productExists = !!manualForm.value.barcode
-    if (productExists && Object.keys(updates).length > 0) {
-      // Aggiorna solo i campi modificati
+    if (productExists) {
       await axios.put(`/product/${manualForm.value.barcode}`, updates)
-    } else if (!productExists) {
-      // Se il prodotto non esiste (creazione), POST come prima
+    } else {
       await axios.post('/product', {
         barcode: manualForm.value.barcode,
         name: manualForm.value.name,
-        image_url: manualForm.value.image_url || null,
+        image_url: manualForm.value.image_url === '' ? null : manualForm.value.image_url,
       })
     }
     await axios.post('/rate', {
@@ -167,7 +165,14 @@ async function submitManualForm() {
     emit('saved')
     show.value = false
   } catch (e) {
-    manualFormError.value = 'Errore durante il salvataggio. Controlla i dati.'
+    // Mostra messaggio dettagliato se disponibile
+    if (e.response && e.response.data && (e.response.data.message || e.response.data.error)) {
+      manualFormError.value = e.response.data.message || e.response.data.error
+    } else if (e.response && e.response.data && typeof e.response.data === 'string') {
+      manualFormError.value = e.response.data
+    } else {
+      manualFormError.value = 'Errore durante il salvataggio. Controlla i dati.'
+    }
   } finally {
     manualFormLoading.value = false
   }
@@ -183,7 +188,7 @@ async function submitManualForm() {
           v-model="manualForm.barcode"
           type="text"
           placeholder="EAN (barcode)"
-          class="border rounded px-3 py-2"
+          class="border rounded px-3 py-2 bg-white text-black dark:bg-zinc-800 dark:text-white dark:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
           required
           autofocus
           ref="eanInputRef"
@@ -205,15 +210,15 @@ async function submitManualForm() {
           </div>
         </div>
         <div v-if="showImageInput" class="flex flex-col gap-2 mb-2">
-          <input v-model="newImageUrl" type="url" placeholder="Nuovo URL immagine" class="border rounded px-3 py-2" />
+          <input v-model="newImageUrl" type="url" placeholder="Nuovo URL immagine" class="border rounded px-3 py-2 bg-white text-black dark:bg-zinc-800 dark:text-white dark:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary-500" />
           <div class="flex gap-2">
 <button @click="updateImageUrl" type="button" class="flex-1 bg-primary-600 text-white rounded-lg px-3 py-2.5 hover:bg-primary-700 transition">Salva immagine</button>
 <button @click="showImageInput = false" type="button" class="flex-1 bg-secondary-300 text-secondary-700 rounded-lg px-3 py-2.5 hover:bg-secondary-400 transition">Annulla</button>
           </div>
         </div>
         <form @submit.prevent="submitManualForm" class="flex flex-col gap-3">
-          <input v-model="manualForm.name" type="text" placeholder="Nome prodotto" class="border rounded px-3 py-2" required />
-          <select v-model="manualForm.rating" class="border rounded px-3 py-2" required>
+          <input v-model="manualForm.name" type="text" placeholder="Nome prodotto" class="border rounded px-3 py-2 bg-white text-black dark:bg-zinc-800 dark:text-white dark:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary-500" required />
+          <select v-model="manualForm.rating" class="border rounded px-3 py-2 bg-white text-black dark:bg-zinc-800 dark:text-white dark:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
             <option value="" disabled>Valutazione</option>
             <option v-for="opt in ratingOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
           </select>
@@ -226,8 +231,8 @@ async function submitManualForm() {
       <div v-else-if="manualStep === 'errore'" class="flex flex-col gap-3">
         <p class="text-red-500">Prodotto non trovato su OpenFoodFacts. Inserisci i dati manualmente.</p>
         <form @submit.prevent="submitManualForm" class="flex flex-col gap-3">
-          <input v-model="manualForm.name" type="text" placeholder="Nome prodotto" class="border rounded px-3 py-2" required />
-          <select v-model="manualForm.rating" class="border rounded px-3 py-2" required>
+          <input v-model="manualForm.name" type="text" placeholder="Nome prodotto" class="border rounded px-3 py-2 bg-white text-black dark:bg-zinc-800 dark:text-white dark:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary-500" required />
+          <select v-model="manualForm.rating" class="border rounded px-3 py-2 bg-white text-black dark:bg-zinc-800 dark:text-white dark:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
             <option value="" disabled>Valutazione</option>
             <option v-for="opt in ratingOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
           </select>
