@@ -30,18 +30,18 @@ function handleImageError() {
 
     <Head title="Welcome" />
     <div class="app-shell flex min-h-screen flex-col justify-between">
-        <main class="app-frame flex flex-1 items-center py-10 sm:py-16">
-            <section class="mx-auto flex w-full max-w-md flex-col items-center gap-6">
+        <main class="app-frame flex flex-1 items-center py-7 sm:py-12">
+            <section class="mx-auto flex w-full max-w-md flex-col items-center gap-5 sm:gap-6">
                 <h1 class="app-page-title text-center">Benvenuto su Gnuff</h1>
 
-                <div class="app-panel w-full p-8 text-center">
+                <div class="app-panel app-panel-pad-lg w-full text-center">
                     <div class="flex flex-col items-center">
-                        <div class="app-logo-badge mb-6">
+                        <div class="app-logo-badge mb-4 sm:mb-6">
                             <img src="/img/icon-192.png" alt="Logo" class="h-28 w-28 rounded-[28px] object-cover" />
                         </div>
                     </div>
                     <p class="text-base font-medium" :style="{ color: 'var(--app-text-soft)' }">Valuta le tue preferenze in fatto di cibarie.</p>
-                    <div class="mt-8 flex flex-col gap-3">
+                    <div class="mt-6 flex flex-col gap-3">
                         <Link v-if="canLogin && !$page.props.auth.user" :href="route('login')"
                             class="app-button-primary w-full text-center">
                             Accedi</Link>

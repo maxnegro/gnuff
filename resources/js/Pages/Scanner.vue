@@ -1,5 +1,5 @@
 <template>
-  <div class="py-2 sm:py-4">
+  <div class="app-page-stack">
       <!-- Modale prodotto/valutazione riutilizzabile -->
       <ProductRatingModal
         v-model="showProductModal"
@@ -9,12 +9,12 @@
       />
 
       <section>
-        <div class="app-panel overflow-hidden p-5 sm:p-6">
+        <div class="app-panel app-panel-pad overflow-hidden">
           <div class="rounded-[24px] border border-dashed border-primary-300/60 p-4 dark:border-primary-500/30" :style="{ background: 'color-mix(in srgb, var(--app-surface-strong) 82%, transparent)' }">
-            <div class="overflow-hidden rounded-[20px]" :style="{ minHeight: '24rem', background: 'color-mix(in srgb, var(--app-bg-muted) 100%, transparent)' }">
+            <div class="overflow-hidden rounded-[20px]" :style="{ minHeight: 'clamp(16rem, 56vh, 24rem)', background: 'color-mix(in srgb, var(--app-bg-muted) 100%, transparent)' }">
               <StreamBarcodeReader v-if="!scannerPaused" :facing-mode="'environment'" @result="onResult" @error="onError"
                 :torch="torchEnabled" />
-              <div v-else class="flex min-h-[24rem] items-center justify-center px-6 text-center">
+              <div v-else class="flex items-center justify-center px-4 text-center sm:px-6" :style="{ minHeight: 'clamp(16rem, 56vh, 24rem)' }">
                 <div>
                   <p class="text-lg font-semibold">Scanner in pausa</p>
                   <p class="mt-2 text-sm" :style="{ color: 'var(--app-text-soft)' }">Riprendi la scansione dopo aver chiuso o salvato la modale prodotto.</p>

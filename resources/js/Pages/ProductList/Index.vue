@@ -1,27 +1,27 @@
 <template>
-  <div class="space-y-6">
+  <div class="app-page-stack space-y-6">
     <div v-if="notification" :class="['rounded-2xl px-4 py-3 text-center text-sm font-medium', notificationType === 'success' ? 'bg-primary-100 text-primary-900 dark:bg-primary-900/40 dark:text-primary-100' : 'bg-red-100 text-red-900 dark:bg-red-900/30 dark:text-red-100']">
       {{ notification }}
     </div>
-    <section class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
+    <section class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 class="app-page-title">Le mie liste</h1>
           </div>
-      <div class="app-panel flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
-      <input v-model="newListName" placeholder="Nuova lista..." class="app-input input input-bordered sm:min-w-[16rem]" />
+      <div class="app-surface-soft flex flex-col gap-2 rounded-3xl p-2 sm:flex-row sm:items-center">
+      <input v-model="newListName" placeholder="Nuova lista..." class="app-input sm:min-w-[16rem]" />
       <button @click="createList" class="btn btn-primary app-button-primary">Crea</button>
       </div>
     </section>
-    <div v-if="lists.length === 0" class="app-panel py-10 text-center" :style="{ color: 'var(--app-text-soft)' }">Nessuna lista presente.</div>
-    <div v-for="list in lists" :key="list.id" class="app-panel p-4 sm:p-5">
+    <div v-if="lists.length === 0" class="app-panel app-empty-state text-center" :style="{ color: 'var(--app-text-soft)' }">Nessuna lista presente.</div>
+    <div v-for="list in lists" :key="list.id" class="app-panel app-panel-pad">
       <div class="flex justify-between items-center mb-2">
         <div>
           <span class="font-bold">{{ list.name }}</span>
           <span v-if="list.owner_id === user.id" class="text-xs text-green-600 ml-2">(owner)</span>
         </div>
         <div class="flex gap-2">
-          <button v-if="list.owner_id === user.id" @click="renameList(list)" class="btn btn-xs app-button-secondary">Rinomina</button>
-          <button v-if="list.owner_id === user.id" @click="deleteList(list)" class="btn btn-xs btn-error">Elimina</button>
+          <button v-if="list.owner_id === user.id" @click="renameList(list)" class="app-button-secondary px-3 py-1.5 text-xs">Rinomina</button>
+          <button v-if="list.owner_id === user.id" @click="deleteList(list)" class="app-button-danger px-3 py-1.5 text-xs">Elimina</button>
         </div>
       </div>
       <div class="mb-2 text-xs" :style="{ color: 'var(--app-text-soft)' }">Membri: <span v-for="u in list.users" :key="u.id">{{ u.name }}{{ u.id !== list.users[list.users.length-1].id ? ', ' : '' }}</span></div>
@@ -29,17 +29,17 @@
         <span v-for="product in list.products" :key="product.id" class="rounded-full px-3 py-1 text-xs font-medium" :style="{ background: 'color-mix(in srgb, var(--app-bg-muted) 100%, transparent)' }">{{ product.name }}</span>
       </div>
       <div class="mt-3 flex flex-col gap-2 sm:flex-row">
-        <input v-model="inviteEmail[list.id]" placeholder="Invita utente (email)" class="app-input input input-xs" />
-        <button @click="inviteUser(list)" class="btn btn-xs app-button-primary">Invita</button>
+        <input v-model="inviteEmail[list.id]" placeholder="Invita utente (email)" class="app-input" />
+        <button @click="inviteUser(list)" class="app-button-primary px-3 py-1.5 text-xs">Invita</button>
       </div>
     </div>
-    <div v-if="invitations.length" class="app-panel mt-6 p-5">
+    <div v-if="invitations.length" class="app-panel app-panel-pad mt-6">
       <h2 class="mb-3 text-lg font-semibold">Inviti ricevuti</h2>
       <div v-for="inv in invitations" :key="inv.id" class="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <span>{{ inv.list_name }} da {{ inv.owner_name }}</span>
         <div class="flex gap-2">
-          <button @click="acceptInvite(inv)" class="btn btn-xs btn-success">Accetta</button>
-          <button @click="declineInvite(inv)" class="btn btn-xs btn-error">Rifiuta</button>
+          <button @click="acceptInvite(inv)" class="app-button-primary px-3 py-1.5 text-xs">Accetta</button>
+          <button @click="declineInvite(inv)" class="app-button-danger px-3 py-1.5 text-xs">Rifiuta</button>
         </div>
       </div>
     </div>
@@ -129,12 +129,3 @@ function declineInvite(inv) {
   });
 }
 </script>
-
-<style scoped>
-.btn { color: #fff; border-radius: 0.75rem; padding: 0.5rem 0.9rem; font-size: 0.9rem; }
-.btn-xs { font-size: 0.75rem; padding: 0.15rem 0.5rem; }
-.btn-error { background: #ef4444; }
-.btn-success { background: #22c55e; }
-.btn-primary { background: #2563eb; }
-.app-button-secondary { color: var(--app-text); background: var(--app-surface-strong); border: 1px solid var(--app-border); }
-</style>

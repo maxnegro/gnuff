@@ -1,23 +1,23 @@
 <template>
-  <div class="space-y-6">
-    <section class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
-      <div></div>
-      <div class="app-surface-soft rounded-3xl p-3 sm:min-w-[16rem]">
+  <div class="app-page-stack space-y-6">
+    <section class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <h1 class="app-page-title">Prodotti</h1>
+      <div class="app-surface-soft rounded-3xl p-2 sm:min-w-[16rem]">
         <button @click="toggleShowAll" class="app-button-secondary w-full text-xs font-semibold uppercase tracking-[0.18em]">
           {{ showAll ? 'solo con valutazione' : 'mostra tutti' }}
         </button>
       </div>
     </section>
 
-    <section class="app-panel p-4 sm:p-6">
-      <div class="mb-5 flex flex-col gap-3">
+    <section class="app-panel app-panel-pad">
+      <div class="mb-4 flex flex-col gap-3">
         <input v-model="search" type="text" placeholder="Cerca per nome o barcode..." class="app-input w-full" />
       </div>
 
       <div class="overflow-x-auto rounded-[24px] border" :style="{ borderColor: 'var(--app-border)', background: 'color-mix(in srgb, var(--app-surface-strong) 90%, transparent)' }">
       <table class="min-w-full text-sm">
         <thead>
-          <tr class="bg-gray-100">
+          <tr :style="{ background: 'color-mix(in srgb, var(--app-bg-muted) 100%, transparent)' }">
             <th v-for="field in tableFields" :key="field" class="px-3 py-3 text-left cursor-pointer select-none text-xs font-semibold uppercase tracking-[0.18em]"
                 @click="sortableFields.includes(field) && sortBy(field)"
                 :class="sortableFields.includes(field) ? 'hover:bg-primary-50 dark:hover:bg-slate-800/80' : ''">
@@ -56,7 +56,7 @@
         </tbody>
       </table>
       </div>
-      <div v-if="filteredProducts.length === 0" class="py-10 text-center" :style="{ color: 'var(--app-text-soft)' }">Nessun prodotto trovato.</div>
+      <div v-if="filteredProducts.length === 0" class="app-empty-state text-center" :style="{ color: 'var(--app-text-soft)' }">Nessun prodotto trovato.</div>
     </section>
   </div>
 </template>

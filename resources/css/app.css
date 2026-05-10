@@ -97,7 +97,7 @@
 	}
 
 	.app-page-title {
-		@apply text-3xl font-semibold tracking-tight sm:text-4xl;
+		@apply text-2xl font-semibold tracking-tight sm:text-4xl;
 		color: var(--app-text);
 	}
 
@@ -108,7 +108,7 @@
 
 	.app-input,
 	.app-select {
-		@apply w-full rounded-2xl px-4 py-3 text-sm transition focus:ring-0;
+		@apply w-full rounded-2xl px-4 py-2.5 text-sm transition focus:ring-0 sm:py-3;
 		color: var(--app-text);
 		background: color-mix(in srgb, var(--app-surface-strong) 88%, transparent);
 		border: 1px solid var(--app-border);
@@ -123,7 +123,7 @@
 	}
 
 	.app-button-primary {
-		@apply inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold text-white transition duration-200;
+		@apply inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold text-white transition duration-200 sm:px-5 sm:py-3;
 		background: linear-gradient(135deg, #16a34a, #15803d);
 		box-shadow: 0 12px 28px rgba(21, 128, 61, 0.28);
 	}
@@ -134,7 +134,7 @@
 	}
 
 	.app-button-secondary {
-		@apply inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold transition duration-200;
+		@apply inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold transition duration-200 sm:px-5 sm:py-3;
 		color: var(--app-text);
 		background: color-mix(in srgb, var(--app-surface-strong) 90%, transparent);
 		border: 1px solid var(--app-border);
@@ -145,9 +145,37 @@
 		border-color: rgba(34, 197, 94, 0.4);
 	}
 
+	.app-button-danger {
+		@apply inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold text-white transition duration-200 sm:px-5 sm:py-3;
+		background: linear-gradient(135deg, #ef4444, #dc2626);
+		box-shadow: 0 12px 28px rgba(220, 38, 38, 0.28);
+	}
+
+	.app-button-danger:hover {
+		transform: translateY(-1px);
+		box-shadow: 0 16px 32px rgba(220, 38, 38, 0.34);
+	}
+
 	.app-logo-badge {
-		@apply rounded-[24px] p-3;
+		@apply rounded-[24px] p-2.5 sm:p-3;
 		background: linear-gradient(145deg, rgba(255, 255, 255, 0.88), rgba(220, 252, 231, 0.72));
 		box-shadow: var(--app-shadow-soft);
+	}
+
+	/* Shared spacing utilities to keep density consistent and easy to tune globally. */
+	.app-page-stack {
+		@apply py-2 sm:py-4;
+	}
+
+	.app-panel-pad {
+		@apply p-4 sm:p-6;
+	}
+
+	.app-panel-pad-lg {
+		@apply p-5 sm:p-8;
+	}
+
+	.app-empty-state {
+		@apply py-8 sm:py-10;
 	}
 }

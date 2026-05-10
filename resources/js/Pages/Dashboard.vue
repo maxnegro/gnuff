@@ -81,8 +81,8 @@ watch(
 </script>
 
 <template>
-  <section class="space-y-8 py-2 sm:py-4">
-        <div class="app-panel flex min-h-[12rem] items-center justify-between gap-6 overflow-hidden p-5 sm:p-6">
+  <section class="app-page-stack space-y-6">
+        <div class="app-panel app-panel-pad flex min-h-[10rem] items-center justify-between gap-5 sm:min-h-[12rem] sm:gap-6">
           <div class="flex min-w-0 items-center">
             <img src="/img/icon-1024.png" alt="Dashboard header" class="h-28 w-28 sm:h-36 sm:w-36 object-contain" />
           </div>
@@ -95,7 +95,7 @@ watch(
         <ProductRatingModal v-model="showManualForm" :initial-step="manualStep" :initial-form="manualForm"
           @saved="() => router.reload({ only: ['ratings'] })" />
 
-        <div v-if="ratings.length" class="app-panel p-6">
+        <div v-if="ratings.length" class="app-panel app-panel-pad">
           <h2 class="text-lg font-semibold mb-4">Valutazioni recenti</h2>
           <div class="space-y-3">
             <div v-for="rating in ratings" :key="rating.id"
@@ -118,7 +118,7 @@ watch(
             </div>
           </div>
         </div>
-        <div v-else class="app-panel py-12 text-center" :style="{ color: 'var(--app-text-soft)' }">
+        <div v-else class="app-panel app-empty-state text-center" :style="{ color: 'var(--app-text-soft)' }">
           <p class="text-lg">Non hai ancora fatto nessuna valutazione.</p>
           <p class="mt-2 text-sm">Inizia scansionando un codice o aggiungendo un nuovo prodotto.</p>
         </div>
