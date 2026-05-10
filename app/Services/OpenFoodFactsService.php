@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class OpenFoodFactsService
 {
@@ -37,6 +38,11 @@ class OpenFoodFactsService
                 'Accept' => 'application/json',
             ])->get("{$this->baseUrl}/product/{$barcode}?{$query}");
         } catch (\Exception $e) {
+            Log::warning('OpenFoodFacts product lookup failed due to connection issue.', [
+                'barcode' => $barcode,
+                'exception' => $e,
+            ]);
+
             return [
                 'error' => 'Errore di connessione a OpenFoodFacts',
                 'status' => null,
@@ -52,6 +58,12 @@ class OpenFoodFactsService
                 'error' => null,
             ];
         }
+
+        Log::warning('OpenFoodFacts product lookup returned non-success status.', [
+            'barcode' => $barcode,
+            'http_status' => $response->status(),
+        ]);
+
         return [
             'status' => null,
             'product' => null,
@@ -72,12 +84,23 @@ class OpenFoodFactsService
                 'Accept' => 'application/json',
             ])->get("{$this->baseUrl}/search?{$query}");
         } catch (\Exception $e) {
+            Log::warning('OpenFoodFacts search failed due to connection issue.', [
+                'params' => $params,
+                'exception' => $e,
+            ]);
+
             return null;
         }
         if ($response->successful()) {
             $json = $response->json();
             return $json['products'] ?? null;
         }
+
+        Log::warning('OpenFoodFacts search returned non-success status.', [
+            'params' => $params,
+            'http_status' => $response->status(),
+        ]);
+
         return null;
     }
 }

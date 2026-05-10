@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class ProductImageCacheService
@@ -65,25 +66,53 @@ class ProductImageCacheService
                 ])
                 ->get($remoteUrl);
         } catch (\Throwable $e) {
+            Log::warning('Remote image cache request failed.', [
+                'barcode' => $barcode,
+                'url' => $remoteUrl,
+                'exception' => $e,
+            ]);
+
             return null;
         }
 
         if (!$response->successful()) {
+            Log::warning('Remote image cache request returned non-success status.', [
+                'barcode' => $barcode,
+                'url' => $remoteUrl,
+                'http_status' => $response->status(),
+            ]);
+
             return null;
         }
 
         $body = $response->body();
         if ($body === '') {
+            Log::debug('Remote image cache response body is empty.', [
+                'barcode' => $barcode,
+                'url' => $remoteUrl,
+            ]);
+
             return null;
         }
 
         // Evita di salvare payload non immagine (es. HTML di errore) con estensione jpg/png.
         if (@getimagesizefromstring($body) === false) {
+            Log::debug('Remote image cache response is not a valid image payload.', [
+                'barcode' => $barcode,
+                'url' => $remoteUrl,
+            ]);
+
             return null;
         }
 
         $contentType = strtolower((string) $response->header('Content-Type'));
         if ($this->isClearlyNotImage($contentType)) {
+            Log::debug('Remote image cache content-type is clearly not an image.', [
+                'barcode' => $barcode,
+                'url' => $remoteUrl,
+                'content_type' => $contentType,
+            ]);
+
             return null;
         }
 

@@ -198,6 +198,7 @@ class ProductImageUpdateTest extends TestCase
 
         $response
             ->assertStatus(422)
+            ->assertJsonPath('code', 'VALIDATION_ERROR')
             ->assertJsonValidationErrors(['name']);
     }
 

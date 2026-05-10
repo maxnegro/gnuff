@@ -11,30 +11,30 @@
 - [ ] **Rivedere il layout principale**
   - [x] Test di copertura layout principale
   - [x] Introdurre un design system globale base (palette, superfici, pulsanti, campi)
-  - [ ] Applicare principi di design armonico (spaziatura, colori, tipografia)
+  - [x] Applicare principi di design armonico (spaziatura, colori, tipografia)
   - [x] Allineare layout principali e welcome page a un primo refactor visivo coerente
   - [x] Allineare Scanner, Prodotti, Liste e modale prodotto al design system base
-  - [ ] Prevedere per tutte le viste il supporto per tema light/dark di sistema
+  - [x] Prevedere per tutte le viste il supporto per tema light/dark di sistema
   - [x] Attivare il supporto light/dark di sistema su layout principali e welcome page
   - [x] Estendere il supporto light/dark alle viste applicative principali
-  - [ ] Ottimizzare la responsività per dispositivi mobili
-  - [ ] Aggiungere animazioni sottili per interazioni utente
+  - [x] Ottimizzare la responsività per dispositivi mobili
+  - [x] Aggiungere animazioni sottili per interazioni utente
 
 ### 2. Ottimizzazione Codice
 - [ ] **Rifattorizzare componenti Vue**
   - [ ] Scomporre componenti grandi in componenti più piccoli e riutilizzabili
   - [ ] Applicare pattern di design (es. composable per logica condivisa)
-  - [ ] Aggiungere commenti e documentazione per ogni componente
+  - [ ] Documentare composables e componenti complessi
 
 - [ ] **Ottimizzare le chiamate API**  
   - [ ] Implementare il caching delle risposte API con Redis  
   - [ ] Ridurre il numero di chiamate API tramite batching  
   - [ ] Aggiungere rate limiting per proteggere l'API  
 
-- [ ] **Migliorare la gestione degli errori**  
-  - [ ] Implementare un sistema di errori personalizzato con messaggi chiari  
-  - [ ] Aggiungere logging dettagliato per debug  
-  - [ ] Ottimizzare la gestione delle eccezioni per evitare crash  
+- [x] **Migliorare la gestione degli errori**  
+  - [x] Implementare un sistema di errori personalizzato con messaggi chiari  
+  - [x] Aggiungere logging dettagliato per debug  
+  - [x] Ottimizzare la gestione delle eccezioni per evitare crash  
 
 ### 3. Test e Qualità
 - [ ] **Aggiungere test unitari per componenti UI**  

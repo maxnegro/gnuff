@@ -104,7 +104,10 @@ class ApiIntegrationTest extends TestCase
         $response = $this->actingAs($user)->postJson('/api/rate', $invalidData);
 
         // Assert
-        $response->assertStatus(422);
+        $response
+            ->assertStatus(422)
+            ->assertJsonPath('code', 'VALIDATION_ERROR')
+            ->assertJsonValidationErrors(['value']);
     }
 
     public function test_missing_user_auth(): void
@@ -130,6 +133,9 @@ class ApiIntegrationTest extends TestCase
         $response = $this->actingAs($user)->postJson('/api/rate', $invalidData);
 
         // Assert
-        $response->assertStatus(422);
+        $response
+            ->assertStatus(422)
+            ->assertJsonPath('code', 'VALIDATION_ERROR')
+            ->assertJsonValidationErrors(['barcode']);
     }
 }

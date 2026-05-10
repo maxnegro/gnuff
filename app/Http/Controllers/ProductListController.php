@@ -7,43 +7,86 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class ProductListController extends Controller {
 
+        private ?string $requestId = null;
+
+        private function getRequestId(): string
+    {
+        if ($this->requestId) {
+            return $this->requestId;
+        }
+
+        $incoming = request()->headers->get('X-Request-Id');
+        $this->requestId = is_string($incoming) && $incoming !== ''
+            ? $incoming
+            : (string) str()->uuid();
+
+        return $this->requestId;
+    }
+
+        private function errorResponse(string $code, string $message, int $status, array $details = [])
+    {
+        return response()->json([
+            'success' => false,
+            'code' => $code,
+            'message' => $message,
+            'error' => $message,
+            'request_id' => $this->getRequestId(),
+            'details' => $details,
+        ], $status);
+    }
+
         // API: restituisce lista attiva e tutte le liste dell'utente
         public function activeAndAll(Request $request)
     {
-        $user = Auth::user();
-        $owned = $user->ownedProductLists()->get();
-        $shared = $user->sharedProductLists()->get();
-        $all = $owned->concat($shared)->unique('id')->values();
+        try {
+            $user = Auth::user();
+            $owned = $user->ownedProductLists()->get();
+            $shared = $user->sharedProductLists()->get();
+            $all = $owned->concat($shared)->unique('id')->values();
 
-        // Ordine di priorità:
-        // 1. selected_list_id se accessibile
-        // 2. lista "Default" se accessibile
-        // 3. prima lista disponibile
+            // Ordine di priorità:
+            // 1. selected_list_id se accessibile
+            // 2. lista "Default" se accessibile
+            // 3. prima lista disponibile
 
-        $active = null;
-        if ($user->selected_list_id) {
-            $active = $all->firstWhere('id', $user->selected_list_id);
-        }
-        if (!$active) {
-            $active = $all->firstWhere(fn($l) => strtolower($l->name) === 'default');
-        }
-        if (!$active) {
-            $active = $all->first();
-        }
+            $active = null;
+            if ($user->selected_list_id) {
+                $active = $all->firstWhere('id', $user->selected_list_id);
+            }
+            if (!$active) {
+                $active = $all->firstWhere(fn($l) => strtolower($l->name) === 'default');
+            }
+            if (!$active) {
+                $active = $all->first();
+            }
 
-        // Aggiorna la sessione se necessario
-        if ($active) {
-            $request->session()->put('active_list_id', $active->id);
-        }
+            // Aggiorna la sessione se necessario
+            if ($active) {
+                $request->session()->put('active_list_id', $active->id);
+            }
 
-        return response()->json([
-            'active' => $active,
-            'all' => $all,
-        ]);
+            return response()->json([
+                'active' => $active,
+                'all' => $all,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Unhandled exception during product lists active-and-all flow.', [
+                'request_id' => $this->getRequestId(),
+                'user_id' => Auth::id(),
+                'exception' => $e,
+            ]);
+
+            return $this->errorResponse(
+                'LISTS_FETCH_FAILED',
+                'Errore interno durante il recupero delle liste.',
+                500
+            );
+        }
     }
     // Imposta la lista attiva nella sessione
     public function setActive(Request $request, ProductList $productList)
