@@ -184,24 +184,24 @@ const showingNavigationDropdown = ref(false);
         </nav>
 
         <!-- Barra selezione lista attiva -->
-        <div class="app-frame mt-4">
-            <div class="app-surface-soft rounded-3xl px-6 py-4 sm:px-8">
+        <div class="app-frame">
+            <div class="app-surface-soft rounded-3xl px-6 py-4 sm:px-8 mt-2">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-                <div class="flex items-center gap-3">
-                <span class="text-sm font-semibold" :style="{ color: 'var(--app-text)' }">Lista attiva:</span>
-                <select v-model="activeListId" @change="e => changeActiveList(e.target.value)"
-                    class="app-select min-w-[11rem] pr-8 text-sm">
-                    <option v-for="list in allLists" :key="list.id" :value="list.id">
-                        {{ list.name }}
-                    </option>
-                </select>
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-semibold" :style="{ color: 'var(--app-text)' }">Lista attiva:</span>
+                        <select v-model="activeListId" @change="e => changeActiveList(e.target.value)"
+                            class="app-select min-w-[11rem] pr-8 text-sm">
+                            <option v-for="list in allLists" :key="list.id" :value="list.id">
+                                {{ list.name }}
+                            </option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
-        </div>
 
 
-        <div class="app-shell pb-10 pt-6">
+        <div class="app-shell pb-10">
             <!-- Page Heading -->
             <header class="app-frame" v-if="$slots.header">
                 <div class="app-panel px-6 py-6 sm:px-8">
@@ -210,7 +210,7 @@ const showingNavigationDropdown = ref(false);
             </header>
 
             <!-- Page Content -->
-            <main class="app-frame mt-6">
+            <main class="app-frame">
                 <slot />
             </main>
         </div>

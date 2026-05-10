@@ -1,8 +1,12 @@
 <template>
   <div class="app-page-stack space-y-6">
+    <div v-if="notification" :class="['rounded-2xl px-4 py-3 text-center text-sm font-medium', notificationType === 'success' ? 'bg-primary-100 text-primary-900 dark:bg-primary-900/40 dark:text-primary-100' : 'bg-red-100 text-red-900 dark:bg-red-900/30 dark:text-red-100']">
+      {{ notification }}
+    </div>
+
     <section class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <h1 class="app-page-title">Prodotti</h1>
-      <div class="app-surface-soft rounded-3xl p-2 sm:min-w-[16rem]">
+      <div><h1 class="app-page-title">Prodotti</h1></div>
+      <div class="app-surface-soft flex flex-col gap-2 rounded-3xl p-2 sm:flex-row sm:items-center">
         <button @click="toggleShowAll" class="app-button-secondary w-full text-xs font-semibold uppercase tracking-[0.18em]">
           {{ showAll ? 'solo con valutazione' : 'mostra tutti' }}
         </button>

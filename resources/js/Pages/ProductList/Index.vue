@@ -3,13 +3,13 @@
     <div v-if="notification" :class="['rounded-2xl px-4 py-3 text-center text-sm font-medium', notificationType === 'success' ? 'bg-primary-100 text-primary-900 dark:bg-primary-900/40 dark:text-primary-100' : 'bg-red-100 text-red-900 dark:bg-red-900/30 dark:text-red-100']">
       {{ notification }}
     </div>
-    <section class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 class="app-page-title">Le mie liste</h1>
-          </div>
+    <section class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h1 class="app-page-title">Le mie liste</h1>
+      </div>
       <div class="app-surface-soft flex flex-col gap-2 rounded-3xl p-2 sm:flex-row sm:items-center">
-      <input v-model="newListName" placeholder="Nuova lista..." class="app-input sm:min-w-[16rem]" />
-      <button @click="createList" class="btn btn-primary app-button-primary">Crea</button>
+        <input v-model="newListName" placeholder="Nuova lista..." class="app-input sm:min-w-[16rem]" />
+        <button @click="createList" class="btn btn-primary app-button-primary">Crea</button>
       </div>
     </section>
     <div v-if="lists.length === 0" class="app-panel app-empty-state text-center" :style="{ color: 'var(--app-text-soft)' }">Nessuna lista presente.</div>
