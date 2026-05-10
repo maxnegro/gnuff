@@ -1,397 +1,411 @@
 <?php
-    namespace App\Http\Controllers;
 
-    use Illuminate\Http\Request;
-    use App\Models\Product;
-    use App\Services\OpenFoodFactsService;
-    use App\Services\ProductImageCacheService;
-    use Illuminate\Support\Facades\Log;
-    use Illuminate\Validation\ValidationException;
-    use Inertia\Inertia;
+namespace App\Http\Controllers;
 
-    class ProductController extends Controller
+use App\Models\Product;
+use App\Models\ProductList;
+use App\Services\OpenFoodFactsService;
+use App\Services\ProductImageCacheService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
+
+class ProductController extends Controller
+{
+    private ?string $requestId = null;
+
+    private function getRequestId(): string
     {
-        private ?string $requestId = null;
-
-        private function getRequestId(): string
-        {
-            if ($this->requestId) {
-                return $this->requestId;
-            }
-
-            $incoming = request()->headers->get('X-Request-Id');
-            $this->requestId = is_string($incoming) && $incoming !== ''
-                ? $incoming
-                : (string) str()->uuid();
-
+        if ($this->requestId) {
             return $this->requestId;
         }
 
-        private function errorResponse(string $code, string $message, int $status, array $details = [])
-        {
-            return response()->json([
-                'success' => false,
-                'code' => $code,
-                'message' => $message,
-                // Compatibilità con frontend esistente che legge e.response.data.error
-                'error' => $message,
-                'request_id' => $this->getRequestId(),
-                'details' => $details,
-            ], $status);
+        $incoming = request()->headers->get('X-Request-Id');
+        $this->requestId = is_string($incoming) && $incoming !== ''
+            ? $incoming
+            : (string) str()->uuid();
+
+        return $this->requestId;
+    }
+
+    private function errorResponse(string $code, string $message, int $status, array $details = []): JsonResponse
+    {
+        return response()->json([
+            'success' => false,
+            'code' => $code,
+            'message' => $message,
+            // Compatibilità con frontend esistente che legge e.response.data.error
+            'error' => $message,
+            'request_id' => $this->getRequestId(),
+            'details' => $details,
+        ], $status);
+    }
+
+    private function imageUrlRules(): array
+    {
+        return [
+            'nullable',
+            'string',
+            function ($attribute, $value, $fail) {
+                if ($value === null || $value === '') {
+                    return;
+                }
+
+                $valueAsString = (string) $value;
+                $path = parse_url($valueAsString, PHP_URL_PATH);
+                if (str_starts_with($valueAsString, '/storage/') || str_starts_with((string) $path, '/storage/')) {
+                    return;
+                }
+
+                if (filter_var($value, FILTER_VALIDATE_URL)) {
+                    return;
+                }
+
+                $fail('Il campo immagine deve essere un URL valido o un percorso locale /storage/.');
+            },
+        ];
+    }
+
+    private function resolveImageUrlForPersistence(
+        ?string $incomingImageUrl,
+        string $barcode,
+        ProductImageCacheService $imageCacheService
+    ): ?string {
+        if ($incomingImageUrl === null || $incomingImageUrl === '') {
+            return null;
         }
 
-        private function imageUrlRules(): array
-        {
-            return [
-                'nullable',
-                'string',
-                function ($attribute, $value, $fail) {
-                    if ($value === null || $value === '') {
-                        return;
-                    }
-
-                    $path = parse_url((string) $value, PHP_URL_PATH);
-                    if (str_starts_with((string) $value, '/storage/') || str_starts_with((string) $path, '/storage/')) {
-                        return;
-                    }
-
-                    if (filter_var($value, FILTER_VALIDATE_URL)) {
-                        return;
-                    }
-
-                    $fail('Il campo immagine deve essere un URL valido o un percorso locale /storage/.');
-                },
-            ];
+        if ($imageCacheService->isLocalStorageUrl($incomingImageUrl)) {
+            return $imageCacheService->toStoragePath($incomingImageUrl);
         }
 
-        private function resolveImageUrlForPersistence(
-            ?string $incomingImageUrl,
-            string $barcode,
-            ProductImageCacheService $imageCacheService
-        ): ?string {
-            if ($incomingImageUrl === null || $incomingImageUrl === '') {
-                return null;
-            }
+        return $imageCacheService->cacheRemoteImage($incomingImageUrl, $barcode);
+    }
 
-            if ($imageCacheService->isLocalStorageUrl($incomingImageUrl)) {
-                return $imageCacheService->toStoragePath($incomingImageUrl);
-            }
-
-            return $imageCacheService->cacheRemoteImage($incomingImageUrl, $barcode);
-        }
-
-        /**
-         * Pagina elenco prodotti con props lista attiva e tutte le liste
-         */
-        public function listPage(Request $request)
-        {
+    /**
+     * Pagina elenco prodotti con props lista attiva e tutte le liste
+     */
+    public function listPage(Request $request): InertiaResponse
+    {
         $user = auth()->user();
         $activeListId = $request->session()->get('active_list_id');
         $owned = $user->ownedProductLists()->get();
         $shared = $user->sharedProductLists()->get();
         $all = $owned->concat($shared)->unique('id')->values();
-        $active_list = $all->firstWhere('id', $activeListId) ?? $all->first();
+        $activeList = $all->firstWhere('id', $activeListId) ?? $all->first();
 
         return Inertia::render('Product/List', [
-            'active_list' => $active_list,
+            'active_list' => $activeList,
             'owned' => $owned,
             'shared' => $shared,
         ]);
-        }
+    }
 
-        /**
-         * Restituisce tutti i prodotti (API per lista)
-         */
-        public function apiIndex(Request $request)
-        {
-            $perPage = $request->input('per_page', 100);
-            $listId = $request->input('list_id');
-            if ($listId) {
-                // Prendi solo i prodotti associati alla lista
-                $products = \App\Models\ProductList::find($listId)?->products()->orderBy('name')->paginate($perPage);
-                if (!$products) {
-                    return response()->json(['data' => []]);
-                }
-            } else {
-                $products = Product::orderBy('name')->paginate($perPage);
+    /**
+     * Restituisce tutti i prodotti (API per lista)
+     */
+    public function apiIndex(Request $request): JsonResponse
+    {
+        $perPage = $request->input('per_page', 100);
+        $listId = $request->input('list_id');
+
+        if ($listId) {
+            // Prendi solo i prodotti associati alla lista
+            $products = ProductList::find($listId)?->products()->orderBy('name')->paginate($perPage);
+            if (! $products) {
+                return response()->json(['data' => []]);
             }
-            return response()->json($products);
+        } else {
+            $products = Product::orderBy('name')->paginate($perPage);
         }
 
-        public function show($barcode, OpenFoodFactsService $openFoodFactsService, ProductImageCacheService $imageCacheService)
-        {
-            try {
-                // Cerca prodotto nel DB
-                $product = Product::where('barcode', $barcode)->first();
+        return response()->json($products);
+    }
 
-                // Se il prodotto ha ancora URL esterno, prova a localizzarlo in cache.
-                if ($product && $product->image_url && !$imageCacheService->isLocalStorageUrl($product->image_url)) {
-                    $cachedExistingImage = $imageCacheService->cacheRemoteImage($product->image_url, $barcode);
-                    if ($cachedExistingImage) {
-                        $product->update(['image_url' => $cachedExistingImage]);
-                        $product->refresh();
-                    }
+    public function show(string $barcode, OpenFoodFactsService $openFoodFactsService, ProductImageCacheService $imageCacheService): JsonResponse
+    {
+        try {
+            // Cerca prodotto nel DB
+            $product = Product::where('barcode', $barcode)->first();
+
+            // Se il prodotto ha ancora URL esterno, prova a localizzarlo in cache.
+            if ($product && $product->image_url && ! $imageCacheService->isLocalStorageUrl($product->image_url)) {
+                $cachedExistingImage = $imageCacheService->cacheRemoteImage($product->image_url, $barcode);
+                if ($cachedExistingImage) {
+                    $product->update(['image_url' => $cachedExistingImage]);
+                    $product->refresh();
                 }
+            }
 
-                // Chiamata centralizzata tramite service
-                $apiResult = $openFoodFactsService->getProductByBarcode($barcode);
-                $apiStatus = $apiResult['status'];
-                $apiProduct = $apiResult['product'];
-                $apiError = $apiResult['error'];
+            // Chiamata centralizzata tramite service
+            $apiResult = $openFoodFactsService->getProductByBarcode($barcode);
+            $apiStatus = $apiResult['status'];
+            $apiProduct = $apiResult['product'];
+            $apiError = $apiResult['error'];
 
-                if ($apiError && !$product) {
-                    Log::warning('Product lookup failed on external source and no local fallback.', [
-                        'barcode' => $barcode,
-                        'request_id' => $this->getRequestId(),
-                        'error' => $apiError,
-                    ]);
-
-                    return $this->errorResponse('OFF_LOOKUP_FAILED', $apiError, 502, [
-                        'barcode' => $barcode,
-                    ]);
-                }
-
-                $fields = [
+            if ($apiError && ! $product) {
+                Log::warning('Product lookup failed on external source and no local fallback.', [
                     'barcode' => $barcode,
-                    'name' => null,
-                    'image_url' => null,
-                ];
+                    'request_id' => $this->getRequestId(),
+                    'error' => $apiError,
+                ]);
 
-                if ($apiStatus === 1 && $apiProduct) {
-                    // Prodotto trovato su OpenFoodFacts
-                    // Aggiorna solo i campi null/vuoti nel DB
-                    $cachedApiImage = $imageCacheService->cacheRemoteImage(
-                        $apiProduct['image_url'] ?? $apiProduct['image_front_url'] ?? null,
-                        $barcode
-                    );
-                    $fields['name'] = $product && $product->name ? $product->name : ($apiProduct['product_name'] ?? null);
-                    $fields['image_url'] = $product
-                        ? ($imageCacheService->toStoragePath($product->image_url) ?? null)
-                        : $cachedApiImage;
-                    // Aggiorna solo se almeno un campo era vuoto e ora valorizzato
-                    if ($product) {
-                        $toUpdate = [];
-                        if (!$product->name && $fields['name']) $toUpdate['name'] = $fields['name'];
-                        if (!$product->image_url && $fields['image_url']) $toUpdate['image_url'] = $fields['image_url'];
-                        if (!empty($toUpdate)) {
-                            $product->update($toUpdate);
-                        }
-                    } else {
-                        $product = Product::create($fields);
+                return $this->errorResponse('OFF_LOOKUP_FAILED', $apiError, 502, [
+                    'barcode' => $barcode,
+                ]);
+            }
+
+            $fields = [
+                'barcode' => $barcode,
+                'name' => null,
+                'image_url' => null,
+            ];
+
+            if ($apiStatus === 1 && $apiProduct) {
+                // Prodotto trovato su OpenFoodFacts
+                // Aggiorna solo i campi null/vuoti nel DB
+                $cachedApiImage = $imageCacheService->cacheRemoteImage(
+                    $apiProduct['image_url'] ?? $apiProduct['image_front_url'] ?? null,
+                    $barcode
+                );
+                $fields['name'] = $product?->name ?? ($apiProduct['product_name'] ?? null);
+                $fields['image_url'] = $product
+                    ? ($imageCacheService->toStoragePath($product->image_url) ?? null)
+                    : $cachedApiImage;
+                // Aggiorna solo se almeno un campo era vuoto e ora valorizzato
+                if ($product) {
+                    $toUpdate = [];
+                    if (! $product->name && $fields['name']) {
+                        $toUpdate['name'] = $fields['name'];
                     }
-                } elseif ($apiStatus === 0 && !$product) {
-                    // Prodotto non trovato né su DB né su OpenFoodFacts
-                    return response()->json([
-                        'product' => $fields,
-                        'rating' => null,
-                        'not_found' => true,
-                    ]);
-                } elseif (!$product) {
-                    // Errore generico o risposta inattesa
-                    Log::warning('Unexpected external product response without local fallback.', [
-                        'barcode' => $barcode,
+                    if (! $product->image_url && $fields['image_url']) {
+                        $toUpdate['image_url'] = $fields['image_url'];
+                    }
+                    if (! empty($toUpdate)) {
+                        $product->update($toUpdate);
+                    }
+                } else {
+                    $product = Product::create($fields);
+                }
+            } elseif ($apiStatus === 0 && ! $product) {
+                // Prodotto non trovato né su DB né su OpenFoodFacts
+                return response()->json([
+                    'product' => $fields,
+                    'rating' => null,
+                    'not_found' => true,
+                ]);
+            } elseif (! $product) {
+                // Errore generico o risposta inattesa
+                Log::warning('Unexpected external product response without local fallback.', [
+                    'barcode' => $barcode,
+                    'request_id' => $this->getRequestId(),
+                    'api_status' => $apiStatus,
+                    'api_error' => $apiError,
+                ]);
+
+                return $this->errorResponse(
+                    'OFF_INVALID_RESPONSE',
+                    $apiError ?? 'Errore nella risposta da OpenFoodFacts',
+                    502,
+                    ['barcode' => $barcode]
+                );
+            } else {
+                // Prodotto già in DB
+                $fields['name'] = $product->name;
+                $fields['image_url'] = $imageCacheService->toStoragePath($product->image_url) ?? null;
+            }
+
+            // Verifica se esiste già un rating per la lista attiva
+            $activeListId = session('active_list_id');
+            $existingRating = $product->ratings()
+                ->where('product_list_id', $activeListId)
+                ->first();
+
+            return response()->json([
+                'product' => $fields,
+                'rating' => $existingRating?->rating,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Unhandled exception during product show flow.', [
+                'barcode' => $barcode,
+                'request_id' => $this->getRequestId(),
+                'exception' => $e,
+            ]);
+
+            return $this->errorResponse(
+                'PRODUCT_SHOW_FAILED',
+                'Errore interno durante il recupero del prodotto.',
+                500,
+                ['barcode' => $barcode]
+            );
+        }
+    }
+
+    public function store(Request $request, ProductImageCacheService $imageCacheService): JsonResponse
+    {
+        try {
+            if ($request->input('image_url') === '') {
+                $request->merge(['image_url' => null]);
+            }
+
+            $validated = $request->validate([
+                'barcode' => 'required',
+                'name' => 'required|string|max:255',
+                'image_url' => $this->imageUrlRules(),
+            ]);
+
+            $fields = ['name' => $validated['name']];
+            if (array_key_exists('image_url', $validated) && $validated['image_url']) {
+                $localizedImageUrl = $this->resolveImageUrlForPersistence(
+                    $validated['image_url'],
+                    $validated['barcode'],
+                    $imageCacheService
+                );
+
+                if ($localizedImageUrl === null) {
+                    Log::warning('Unable to cache product image on store.', [
+                        'barcode' => $validated['barcode'],
                         'request_id' => $this->getRequestId(),
-                        'api_status' => $apiStatus,
-                        'api_error' => $apiError,
                     ]);
 
                     return $this->errorResponse(
-                        'OFF_INVALID_RESPONSE',
-                        $apiError ?? 'Errore nella risposta da OpenFoodFacts',
-                        502,
-                        ['barcode' => $barcode]
+                        'IMAGE_CACHE_FAILED',
+                        'Impossibile scaricare e salvare localmente l\'immagine indicata.',
+                        422,
+                        ['barcode' => $validated['barcode']]
                     );
-                } else {
-                    // Prodotto già in DB
-                    $fields['name'] = $product->name;
-                    $fields['image_url'] = $imageCacheService->toStoragePath($product->image_url) ?? null;
                 }
 
-                // Verifica se esiste già un rating per la lista attiva
-                $activeListId = session('active_list_id');
-                $existingRating = $product->ratings()
-                    ->where('product_list_id', $activeListId)
-                    ->first();
-
-                return response()->json([
-                    'product' => $fields,
-                    'rating' => $existingRating?->rating,
-                ]);
-            } catch (\Throwable $e) {
-                Log::error('Unhandled exception during product show flow.', [
-                    'barcode' => $barcode,
-                    'request_id' => $this->getRequestId(),
-                    'exception' => $e,
-                ]);
-
-                return $this->errorResponse(
-                    'PRODUCT_SHOW_FAILED',
-                    'Errore interno durante il recupero del prodotto.',
-                    500,
-                    ['barcode' => $barcode]
-                );
+                $fields['image_url'] = $localizedImageUrl;
             }
-        }
 
-        public function store(Request $request, ProductImageCacheService $imageCacheService)
-        {
-            try {
-                if ($request->input('image_url') === '') {
-                    $request->merge(['image_url' => null]);
-                }
+            $product = Product::updateOrCreate(
+                ['barcode' => $validated['barcode']],
+                $fields
+            );
 
-                $validated = $request->validate([
-                    'barcode' => 'required',
-                    'name' => 'required|string|max:255',
-                    'image_url' => $this->imageUrlRules(),
-                ]);
-
-                $fields = ['name' => $validated['name']];
-                if (array_key_exists('image_url', $validated) && $validated['image_url']) {
-                    $localizedImageUrl = $this->resolveImageUrlForPersistence(
-                        $validated['image_url'],
-                        $validated['barcode'],
-                        $imageCacheService
-                    );
-
-                    if ($localizedImageUrl === null) {
-                        Log::warning('Unable to cache product image on store.', [
-                            'barcode' => $validated['barcode'],
-                            'request_id' => $this->getRequestId(),
-                        ]);
-
-                        return $this->errorResponse(
-                            'IMAGE_CACHE_FAILED',
-                            'Impossibile scaricare e salvare localmente l\'immagine indicata.',
-                            422,
-                            ['barcode' => $validated['barcode']]
-                        );
-                    }
-
-                    $fields['image_url'] = $localizedImageUrl;
-                }
-                $product = Product::updateOrCreate(
-                    ['barcode' => $validated['barcode']],
-                    $fields
-                );
-
-                return response()->json([
-                    'product' => $product,
-                ]);
-            } catch (ValidationException $e) {
-                throw $e;
-            } catch (\Throwable $e) {
-                Log::error('Unhandled exception during product store flow.', [
-                    'request_id' => $this->getRequestId(),
-                    'payload_barcode' => $request->input('barcode'),
-                    'exception' => $e,
-                ]);
-
-                return $this->errorResponse(
-                    'PRODUCT_STORE_FAILED',
-                    'Errore interno durante il salvataggio del prodotto.',
-                    500
-                );
-            }
-        }
-
-        public function edit(Product $product)
-        {
-            return Inertia::render('Product/Edit', [
+            return response()->json([
                 'product' => $product,
             ]);
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error('Unhandled exception during product store flow.', [
+                'request_id' => $this->getRequestId(),
+                'payload_barcode' => $request->input('barcode'),
+                'exception' => $e,
+            ]);
+
+            return $this->errorResponse(
+                'PRODUCT_STORE_FAILED',
+                'Errore interno durante il salvataggio del prodotto.',
+                500
+            );
         }
+    }
 
-        public function update(Request $request, $barcode, ProductImageCacheService $imageCacheService)
-        {
-            try {
-                if ($request->input('image_url') === '') {
-                    $request->merge(['image_url' => null]);
-                }
+    public function edit(Product $product): InertiaResponse
+    {
+        return Inertia::render('Product/Edit', [
+            'product' => $product,
+        ]);
+    }
 
-                $validated = $request->validate([
-                    'name' => 'required|string|max:255',
-                    'image_url' => $this->imageUrlRules(),
-                ]);
+    public function update(Request $request, string $barcode, ProductImageCacheService $imageCacheService): JsonResponse
+    {
+        try {
+            if ($request->input('image_url') === '') {
+                $request->merge(['image_url' => null]);
+            }
 
-                $product = Product::where('barcode', $barcode)->first();
-                $resolvedImageUrl = null;
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'image_url' => $this->imageUrlRules(),
+            ]);
 
-                if (array_key_exists('image_url', $validated)) {
-                    $resolvedImageUrl = $this->resolveImageUrlForPersistence(
-                        $validated['image_url'],
-                        $barcode,
-                        $imageCacheService
-                    );
+            $product = Product::where('barcode', $barcode)->first();
+            $resolvedImageUrl = null;
 
-                    if ($validated['image_url'] && $resolvedImageUrl === null) {
-                        Log::warning('Unable to cache product image on update.', [
-                            'barcode' => $barcode,
-                            'request_id' => $this->getRequestId(),
-                        ]);
+            if (array_key_exists('image_url', $validated)) {
+                $resolvedImageUrl = $this->resolveImageUrlForPersistence(
+                    $validated['image_url'],
+                    $barcode,
+                    $imageCacheService
+                );
 
-                        return $this->errorResponse(
-                            'IMAGE_CACHE_FAILED',
-                            'Impossibile scaricare e salvare localmente l\'immagine indicata.',
-                            422,
-                            ['barcode' => $barcode]
-                        );
-                    }
-                } elseif ($product) {
-                    $resolvedImageUrl = $product->image_url;
-                }
-
-                if (!$product) {
-                    // Se il prodotto non esiste, crealo
-                    $product = Product::create([
+                if ($validated['image_url'] && $resolvedImageUrl === null) {
+                    Log::warning('Unable to cache product image on update.', [
                         'barcode' => $barcode,
-                        'name' => $validated['name'],
-                        'image_url' => $resolvedImageUrl,
+                        'request_id' => $this->getRequestId(),
                     ]);
-                    return response()->json([
-                        'success' => true,
-                        'created' => true,
-                        'product' => $product->toArray(),
-                        'message' => 'Prodotto creato con successo',
-                    ]);
-                }
 
-                // Aggiorna i campi esistenti
-                $product->update([
+                    return $this->errorResponse(
+                        'IMAGE_CACHE_FAILED',
+                        'Impossibile scaricare e salvare localmente l\'immagine indicata.',
+                        422,
+                        ['barcode' => $barcode]
+                    );
+                }
+            } elseif ($product) {
+                $resolvedImageUrl = $product->image_url;
+            }
+
+            if (! $product) {
+                // Se il prodotto non esiste, crealo
+                $product = Product::create([
+                    'barcode' => $barcode,
                     'name' => $validated['name'],
                     'image_url' => $resolvedImageUrl,
                 ]);
-                $product->refresh();
 
                 return response()->json([
                     'success' => true,
-                    'created' => false,
+                    'created' => true,
                     'product' => $product->toArray(),
-                    'message' => 'Prodotto aggiornato con successo',
+                    'message' => 'Prodotto creato con successo',
                 ]);
-            } catch (ValidationException $e) {
-                throw $e;
-            } catch (\Throwable $e) {
-                Log::error('Unhandled exception during product update flow.', [
-                    'barcode' => $barcode,
-                    'request_id' => $this->getRequestId(),
-                    'exception' => $e,
-                ]);
-
-                return $this->errorResponse(
-                    'PRODUCT_UPDATE_FAILED',
-                    'Errore interno durante l\'aggiornamento del prodotto.',
-                    500,
-                    ['barcode' => $barcode]
-                );
             }
-        }
 
-        public function destroy(Product $product)
-        {
-            $product->delete();
+            // Aggiorna i campi esistenti
+            $product->update([
+                'name' => $validated['name'],
+                'image_url' => $resolvedImageUrl,
+            ]);
+            $product->refresh();
+
             return response()->json([
                 'success' => true,
+                'created' => false,
+                'product' => $product->toArray(),
+                'message' => 'Prodotto aggiornato con successo',
             ]);
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error('Unhandled exception during product update flow.', [
+                'barcode' => $barcode,
+                'request_id' => $this->getRequestId(),
+                'exception' => $e,
+            ]);
+
+            return $this->errorResponse(
+                'PRODUCT_UPDATE_FAILED',
+                'Errore interno durante l\'aggiornamento del prodotto.',
+                500,
+                ['barcode' => $barcode]
+            );
         }
     }
+
+    public function destroy(Product $product): JsonResponse
+    {
+        $product->delete();
+
+        return response()->json([
+            'success' => true,
+        ]);
+    }
+}

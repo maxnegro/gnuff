@@ -4,17 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\ProductList;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 
-class ProductListController extends Controller {
+class ProductListController extends Controller
+{
+    private ?string $requestId = null;
 
-        private ?string $requestId = null;
-
-        private function getRequestId(): string
+    private function getRequestId(): string
     {
         if ($this->requestId) {
             return $this->requestId;
@@ -28,7 +31,7 @@ class ProductListController extends Controller {
         return $this->requestId;
     }
 
-        private function errorResponse(string $code, string $message, int $status, array $details = [])
+    private function errorResponse(string $code, string $message, int $status, array $details = []): JsonResponse
     {
         return response()->json([
             'success' => false,
@@ -40,30 +43,32 @@ class ProductListController extends Controller {
         ], $status);
     }
 
-        // API: restituisce lista attiva e tutte le liste dell'utente
-        public function activeAndAll(Request $request)
+    private function resolveActiveList(Collection $all, ?int $selectedListId): ?ProductList
+    {
+        if ($selectedListId) {
+            $active = $all->firstWhere('id', $selectedListId);
+            if ($active) {
+                return $active;
+            }
+        }
+
+        $active = $all->firstWhere(fn ($list) => strtolower($list->name) === 'default');
+        if ($active) {
+            return $active;
+        }
+
+        return $all->first();
+    }
+
+    // API: restituisce lista attiva e tutte le liste dell'utente
+    public function activeAndAll(Request $request): JsonResponse
     {
         try {
             $user = Auth::user();
             $owned = $user->ownedProductLists()->get();
             $shared = $user->sharedProductLists()->get();
             $all = $owned->concat($shared)->unique('id')->values();
-
-            // Ordine di priorità:
-            // 1. selected_list_id se accessibile
-            // 2. lista "Default" se accessibile
-            // 3. prima lista disponibile
-
-            $active = null;
-            if ($user->selected_list_id) {
-                $active = $all->firstWhere('id', $user->selected_list_id);
-            }
-            if (!$active) {
-                $active = $all->firstWhere(fn($l) => strtolower($l->name) === 'default');
-            }
-            if (!$active) {
-                $active = $all->first();
-            }
+            $active = $this->resolveActiveList($all, $user->selected_list_id);
 
             // Aggiorna la sessione se necessario
             if ($active) {
@@ -88,8 +93,9 @@ class ProductListController extends Controller {
             );
         }
     }
+
     // Imposta la lista attiva nella sessione
-    public function setActive(Request $request, ProductList $productList)
+    public function setActive(Request $request, ProductList $productList): RedirectResponse
     {
         // Carica la relazione users per evitare problemi di lazy loading
         $productList->load('users');
@@ -97,33 +103,26 @@ class ProductListController extends Controller {
         $userId = $user->id;
         $isOwner = $productList->owner_id == $userId;
         $isMember = $productList->users->contains($userId);
-        if (!$isOwner && !$isMember) {
+        if (! $isOwner && ! $isMember) {
             abort(403, 'Non autorizzato');
         }
         $request->session()->put('active_list_id', $productList->id);
         // Persisti la selezione anche dopo il logout
         $user->selected_list_id = $productList->id;
         $user->save();
+
         return redirect()->back()->with('success', 'Lista attiva aggiornata');
     }
 
-    public function index()
+    public function index(): InertiaResponse
     {
         $user = Auth::user();
         $owned = $user->ownedProductLists()->with(['users', 'products'])->get();
         $shared = $user->sharedProductLists()->with(['users', 'products', 'owner'])->get();
         $all = $owned->concat($shared)->unique('id')->values();
-        $active = null;
-        if ($user->selected_list_id) {
-            $active = $all->firstWhere('id', $user->selected_list_id);
-        }
-        if (!$active) {
-            $active = $all->firstWhere(fn($l) => strtolower($l->name) === 'default');
-        }
-        if (!$active) {
-            $active = $all->first();
-        }
+        $active = $this->resolveActiveList($all, $user->selected_list_id);
         $invitations = []; // Da implementare: inviti ricevuti
+
         return Inertia::render('ProductList/Index', [
             'owned' => $owned,
             'shared' => $shared,
@@ -133,7 +132,7 @@ class ProductListController extends Controller {
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $request->validate(['name' => 'required|string|max:255']);
         $list = ProductList::create([
@@ -141,47 +140,52 @@ class ProductListController extends Controller {
             'owner_id' => Auth::id(),
         ]);
         $list->users()->attach(Auth::id());
+
         return redirect()->back();
     }
 
-    public function update(Request $request, ProductList $productList)
+    public function update(Request $request, ProductList $productList): RedirectResponse
     {
         $this->authorize('update', $productList);
         $request->validate(['name' => 'required|string|max:255']);
         $productList->update(['name' => $request->name]);
+
         return redirect()->back();
     }
 
-    public function destroy(ProductList $productList)
+    public function destroy(ProductList $productList): RedirectResponse
     {
         $this->authorize('delete', $productList);
         $productList->delete();
+
         return redirect()->back();
     }
 
     // Invito utente (mock, da implementare logica inviti reali)
-    public function invite(Request $request, ProductList $productList)
+    public function invite(Request $request, ProductList $productList): RedirectResponse
     {
         $this->authorize('update', $productList);
         $request->validate(['email' => 'required|email']);
         $user = User::where('email', $request->email)->first();
-        if (!$user) {
+        if (! $user) {
             return redirect()->back()->withErrors(['email' => 'Utente non trovato']);
         }
         // Qui andrebbe creata una entry invito, per ora aggiunge direttamente
         $productList->users()->syncWithoutDetaching($user->id);
+
         return redirect()->back();
     }
 
     // Accetta invito (mock)
-    public function acceptInvite(Request $request, ProductList $productList)
+    public function acceptInvite(Request $request, ProductList $productList): RedirectResponse
     {
         $productList->users()->syncWithoutDetaching(Auth::id());
+
         return redirect()->back();
     }
 
     // Rifiuta invito (mock)
-    public function declineInvite(Request $request, ProductList $productList)
+    public function declineInvite(Request $request, ProductList $productList): RedirectResponse
     {
         // Qui si eliminerebbe l'invito
         return redirect()->back();

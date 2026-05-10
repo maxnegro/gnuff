@@ -1,9 +1,11 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Rating;
 use App\Models\Product;
+use App\Models\Rating;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -25,7 +27,7 @@ class RatingController extends Controller
         return $this->requestId;
     }
 
-    private function errorResponse(string $code, string $message, int $status, array $details = [])
+    private function errorResponse(string $code, string $message, int $status, array $details = []): JsonResponse
     {
         return response()->json([
             'success' => false,
@@ -38,7 +40,7 @@ class RatingController extends Controller
         ], $status);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         try {
             $request->validate([
@@ -55,7 +57,7 @@ class RatingController extends Controller
             );
 
             $activeListId = session('active_list_id');
-            if (!$activeListId) {
+            if (! $activeListId) {
                 return $this->errorResponse(
                     'ACTIVE_LIST_MISSING',
                     'Nessuna lista attiva selezionata',
@@ -91,13 +93,14 @@ class RatingController extends Controller
         }
     }
 
-    public function userRatings()
+    public function userRatings(): JsonResponse
     {
         $activeListId = session('active_list_id');
-        if (!$activeListId) {
+        if (! $activeListId) {
             return response()->json([]); // Nessuna lista attiva selezionata
         }
-        $ratings = \App\Models\Rating::where('product_list_id', $activeListId)
+
+        $ratings = Rating::where('product_list_id', $activeListId)
             ->with(['product', 'productList'])
             ->latest()
             ->take(10)
@@ -109,7 +112,7 @@ class RatingController extends Controller
     /**
      * Aggiorna un rating esistente
      */
-    public function update(Request $request, Rating $rating)
+    public function update(Request $request, Rating $rating): JsonResponse
     {
         try {
             // Autorizzazione opzionale: aggiungi qui se usi policy
@@ -141,7 +144,7 @@ class RatingController extends Controller
     /**
      * Elimina un rating esistente
      */
-    public function destroy(Rating $rating)
+    public function destroy(Rating $rating): JsonResponse
     {
         try {
             // Autorizzazione opzionale: aggiungi qui se usi policy
@@ -167,15 +170,18 @@ class RatingController extends Controller
     /**
      * Restituisce una lista paginata di rating
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $perPage = $request->input('per_page', 10);
         $listId = $request->input('list_id') ?? session('active_list_id');
         $query = Rating::with('product');
+
         if ($listId) {
             $query->where('product_list_id', $listId);
         }
+
         $ratings = $query->latest()->paginate($perPage);
+
         return response()->json($ratings);
     }
 }
