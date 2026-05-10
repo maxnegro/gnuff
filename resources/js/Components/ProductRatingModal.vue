@@ -188,7 +188,6 @@ async function submitManualForm() {
       <button @click="show = false" class="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full text-secondary-500 transition hover:bg-secondary-100 hover:text-secondary-700 dark:hover:bg-secondary-800/70 dark:hover:text-secondary-100">✖</button>
       <div class="mb-5 pr-10">
         <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary-600 dark:text-primary-300">Valutazione prodotto</p>
-        <h3 class="mt-2 text-lg font-bold">Aggiungi/modifica prodotto tramite EAN</h3>
       </div>
       <form v-if="manualStep === 'ean'" @submit.prevent="cercaEAN" class="flex flex-col gap-3">
         <input

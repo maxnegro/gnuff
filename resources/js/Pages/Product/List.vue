@@ -51,17 +51,18 @@
               <span v-if="ratings[product.id]"> ({{ ratings[product.id] }})</span>
             </td>
           </tr>
-            <ProductRatingModal
-              v-model="showProductModal"
-              :initial-step="modalStep"
-              :initial-form="modalForm"
-              @saved="onModalSaved"
-            />
         </tbody>
       </table>
       </div>
       <div v-if="filteredProducts.length === 0" class="app-empty-state text-center" :style="{ color: 'var(--app-text-soft)' }">Nessun prodotto trovato.</div>
     </section>
+
+    <ProductRatingModal
+      v-model="showProductModal"
+      :initial-step="modalStep"
+      :initial-form="modalForm"
+      @saved="onModalSaved"
+    />
   </div>
 </template>
 
