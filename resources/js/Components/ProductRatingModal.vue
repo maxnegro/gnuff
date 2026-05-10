@@ -185,7 +185,7 @@ async function submitManualForm() {
 <template>
   <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-4 backdrop-blur-sm">
     <div class="app-panel relative w-full max-w-lg p-6 sm:p-7">
-      <button @click="show = false" class="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full text-secondary-500 transition hover:bg-secondary-100 hover:text-secondary-700 dark:hover:bg-secondary-800/70 dark:hover:text-secondary-100">✖</button>
+      <button @click="show = false" class="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full text-secondary-500 transition hover:bg-secondary-100 hover:text-secondary-700 dark:text-slate-300 dark:hover:bg-secondary-800/70 dark:hover:text-white">✖</button>
       <div class="mb-5 pr-10">
         <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary-600 dark:text-primary-300">Valutazione prodotto</p>
       </div>
@@ -202,7 +202,7 @@ async function submitManualForm() {
 <button type="submit" :disabled="manualFormLoading || !manualForm.barcode" class="app-button-primary mt-2 w-full disabled:cursor-not-allowed disabled:opacity-60">
   Cerca prodotto
 </button>
-        <p v-if="manualFormError" class="text-red-500">{{ manualFormError }}</p>
+        <p v-if="manualFormError" class="text-red-500 dark:text-red-400">{{ manualFormError }}</p>
       </form>
       <div v-else-if="manualStep === 'dati'" class="flex flex-col gap-4">
         <div class="flex items-start gap-4 rounded-3xl p-4" :style="{ background: 'color-mix(in srgb, var(--app-bg-muted) 100%, transparent)' }">
@@ -231,11 +231,11 @@ async function submitManualForm() {
 <button type="submit" :disabled="manualFormLoading" class="app-button-primary mt-2 w-full disabled:cursor-not-allowed disabled:opacity-60">
   Salva valutazione
 </button>
-          <p v-if="manualFormError" class="text-red-500">{{ manualFormError }}</p>
+          <p v-if="manualFormError" class="text-red-500 dark:text-red-400">{{ manualFormError }}</p>
         </form>
       </div>
       <div v-else-if="manualStep === 'errore'" class="flex flex-col gap-3">
-        <p class="text-red-500">Prodotto non trovato su OpenFoodFacts. Inserisci i dati manualmente.</p>
+        <p class="text-red-500 dark:text-red-400">Prodotto non trovato su OpenFoodFacts. Inserisci i dati manualmente.</p>
         <form @submit.prevent="submitManualForm" class="flex flex-col gap-3">
           <input v-model="manualForm.name" type="text" placeholder="Nome prodotto" class="app-input" required />
           <select v-model="manualForm.rating" class="app-select" required>
@@ -245,7 +245,7 @@ async function submitManualForm() {
 <button type="submit" :disabled="manualFormLoading" class="app-button-primary mt-2 w-full disabled:cursor-not-allowed disabled:opacity-60">
   Salva valutazione
 </button>
-          <p v-if="manualFormError" class="text-red-500">{{ manualFormError }}</p>
+          <p v-if="manualFormError" class="text-red-500 dark:text-red-400">{{ manualFormError }}</p>
         </form>
       </div>
     </div>
