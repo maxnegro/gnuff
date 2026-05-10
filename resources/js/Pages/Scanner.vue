@@ -5,6 +5,7 @@
         v-model="showProductModal"
         :initial-step="modalStep"
         :initial-form="modalForm"
+        :rating-id="modalRatingId"
         @saved="onModalSaved"
       />
 
@@ -53,6 +54,7 @@ const scannerPaused = ref(false);
 const showProductModal = ref(false);
 const modalStep = ref('ean');
 const modalForm = ref({ barcode: '', name: '', image_url: '', rating: '' });
+const modalRatingId = ref(null);
 
 
 function toggleTorch() {
@@ -75,11 +77,13 @@ async function onResult(result) {
         image_url: response.data.product?.image_url || '',
         rating: response.data.rating || '',
       };
+      modalRatingId.value = response.data.rating_id || null;
       modalStep.value = 'dati';
       showProductModal.value = true;
     } catch (error) {
       // Prodotto non trovato
       modalForm.value = { barcode: result.text, name: '', image_url: '', rating: '' };
+      modalRatingId.value = null;
       modalStep.value = 'errore';
       showProductModal.value = true;
     }

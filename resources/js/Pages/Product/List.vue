@@ -47,8 +47,8 @@
               <img :src="product.image_url || placeholder" @error="e => e.target.src = placeholder" alt="img" class="h-12 w-12 rounded-2xl object-cover" />
             </td>
             <td class="px-3 py-3 whitespace-nowrap">
-              <span class="text-xl">{{ ratingEmojis[ratings[product.id]] || '' }}</span>
-              <span v-if="ratings[product.id]"> ({{ ratings[product.id] }})</span>
+              <span class="text-xl">{{ ratingEmojis[ratings[product.id]?.value] || '' }}</span>
+              <span v-if="ratings[product.id]?.value"> ({{ ratings[product.id].value }})</span>
             </td>
           </tr>
         </tbody>
@@ -61,6 +61,7 @@
       v-model="showProductModal"
       :initial-step="modalStep"
       :initial-form="modalForm"
+      :rating-id="modalRatingId"
       @saved="onModalSaved"
     />
   </div>
@@ -72,14 +73,16 @@ import ProductRatingModal from '@/Components/ProductRatingModal.vue';
 const showProductModal = ref(false);
 const modalStep = ref('ean');
 const modalForm = ref({ barcode: '', name: '', image_url: '', rating: '' });
+const modalRatingId = ref(null);
 
 function openEditModal(product) {
   modalForm.value = {
     barcode: product.barcode,
     name: product.name,
     image_url: product.image_url,
-    rating: ratings.value[product.id] || '',
+    rating: ratings.value[product.id]?.value || '',
   };
+  modalRatingId.value = ratings.value[product.id]?.id || null;
   modalStep.value = 'dati';
   showProductModal.value = true;
 }
@@ -137,7 +140,7 @@ const fetchProducts = async () => {
     const res = await axios.get(`/api/ratings?per_page=100&list_id=${activeListId.value}`);
     ratings.value = {};
     res.data.data.forEach(r => {
-      if (r.product && r.rating) ratings.value[r.product.id] = r.rating;
+      if (r.product && r.rating) ratings.value[r.product.id] = { id: r.id, value: r.rating };
     });
     // console.log('Ratings caricati:', ratings.value);
   } catch (e) {
@@ -153,14 +156,14 @@ const filteredProducts = computed(() => {
   );
   // Se showAll è false, mostra solo prodotti con rating
   if (!showAll.value) {
-    list = list.filter(p => ratings.value[p.id]);
+    list = list.filter(p => ratings.value[p.id]?.value);
   }
   if (sort.value.field) {
     list = [...list].sort((a, b) => {
       if (sort.value.field === 'rating') {
         const order = { gnuf: 4, ok: 3, meh: 2, bleah: 1, '': 0, null: 0, undefined: 0 };
-        const ra = order[ratings.value[a.id]] ?? 0;
-        const rb = order[ratings.value[b.id]] ?? 0;
+        const ra = order[ratings.value[a.id]?.value] ?? 0;
+        const rb = order[ratings.value[b.id]?.value] ?? 0;
         if (ra < rb) return sort.value.direction === 'asc' ? -1 : 1;
         if (ra > rb) return sort.value.direction === 'asc' ? 1 : -1;
         return 0;

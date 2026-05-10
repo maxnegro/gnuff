@@ -6,6 +6,7 @@ const props = defineProps({
   modelValue: Boolean,
   initialStep: { type: String, default: 'ean' },
   initialForm: { type: Object, default: () => ({ barcode: '', name: '', image_url: '', rating: '' }) },
+  ratingId: { type: Number, default: null },
 })
 const emit = defineEmits(['update:modelValue', 'saved'])
 
@@ -143,6 +144,24 @@ async function updateImageUrl() {
   }
 }
 
+async function removeRating() {
+  manualFormError.value = ''
+  manualFormLoading.value = true
+  try {
+    await axios.delete(`/api/rate/${props.ratingId}`)
+    emit('saved')
+    show.value = false
+  } catch (e) {
+    if (e.response && e.response.data && (e.response.data.message || e.response.data.error)) {
+      manualFormError.value = e.response.data.message || e.response.data.error
+    } else {
+      manualFormError.value = 'Errore durante la rimozione della valutazione.'
+    }
+  } finally {
+    manualFormLoading.value = false
+  }
+}
+
 async function submitManualForm() {
   manualFormError.value = ''
   manualFormLoading.value = true
@@ -228,9 +247,12 @@ async function submitManualForm() {
             <option value="" disabled>Valutazione</option>
             <option v-for="opt in ratingOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
           </select>
-<button type="submit" :disabled="manualFormLoading" class="app-button-primary mt-2 w-full disabled:cursor-not-allowed disabled:opacity-60">
-  Salva valutazione
-</button>
+          <button type="submit" :disabled="manualFormLoading" class="app-button-primary mt-2 w-full disabled:cursor-not-allowed disabled:opacity-60">
+            Salva valutazione
+          </button>
+          <button v-if="ratingId" type="button" @click="removeRating" :disabled="manualFormLoading" data-test="remove-rating" class="app-button-secondary w-full disabled:cursor-not-allowed disabled:opacity-60">
+            Rimuovi valutazione
+          </button>
           <p v-if="manualFormError" class="text-red-500 dark:text-red-400">{{ manualFormError }}</p>
         </form>
       </div>
@@ -242,9 +264,12 @@ async function submitManualForm() {
             <option value="" disabled>Valutazione</option>
             <option v-for="opt in ratingOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
           </select>
-<button type="submit" :disabled="manualFormLoading" class="app-button-primary mt-2 w-full disabled:cursor-not-allowed disabled:opacity-60">
-  Salva valutazione
-</button>
+          <button type="submit" :disabled="manualFormLoading" class="app-button-primary mt-2 w-full disabled:cursor-not-allowed disabled:opacity-60">
+            Salva valutazione
+          </button>
+          <button v-if="ratingId" type="button" @click="removeRating" :disabled="manualFormLoading" data-test="remove-rating" class="app-button-secondary w-full disabled:cursor-not-allowed disabled:opacity-60">
+            Rimuovi valutazione
+          </button>
           <p v-if="manualFormError" class="text-red-500 dark:text-red-400">{{ manualFormError }}</p>
         </form>
       </div>

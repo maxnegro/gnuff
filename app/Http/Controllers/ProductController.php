@@ -227,6 +227,7 @@ class ProductController extends Controller
             return response()->json([
                 'product' => $fields,
                 'rating' => $existingRating?->rating,
+                'rating_id' => $existingRating?->id,
             ]);
         } catch (\Throwable $e) {
             Log::error('Unhandled exception during product show flow.', [

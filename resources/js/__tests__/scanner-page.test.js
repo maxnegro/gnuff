@@ -35,6 +35,10 @@ const ProductRatingModalStub = defineComponent({
             type: Object,
             default: () => ({}),
         },
+        ratingId: {
+            type: Number,
+            default: null,
+        },
     },
     emits: ['saved', 'update:modelValue'],
     template: `
@@ -43,6 +47,7 @@ const ProductRatingModalStub = defineComponent({
             <span data-test="modal-barcode">{{ initialForm.barcode }}</span>
             <span data-test="modal-name">{{ initialForm.name }}</span>
             <span data-test="modal-rating">{{ initialForm.rating }}</span>
+            <span data-test="modal-rating-id">{{ ratingId }}</span>
             <button data-test="modal-saved" @click="$emit('saved')">save</button>
         </div>
     `,
@@ -80,6 +85,7 @@ describe('Scanner page', () => {
                     image_url: 'https://example.test/biscotti.jpg',
                 },
                 rating: 'ok',
+                rating_id: 42,
             },
         });
 
@@ -100,6 +106,7 @@ describe('Scanner page', () => {
         expect(wrapper.get('[data-test="modal-barcode"]').text()).toBe('801234567890');
         expect(wrapper.get('[data-test="modal-name"]').text()).toBe('Biscotti');
         expect(wrapper.get('[data-test="modal-rating"]').text()).toBe('ok');
+        expect(wrapper.get('[data-test="modal-rating-id"]').text()).toBe('42');
         expect(wrapper.text()).toContain('▶️ Riprendi');
     });
 });

@@ -70,4 +70,51 @@ describe('ProductRatingModal', () => {
         expect(wrapper.emitted().saved).toBeTruthy();
         expect(wrapper.emitted()['update:modelValue']).toContainEqual([false]);
     });
+
+    it('mostra il pulsante Rimuovi valutazione quando ratingId è presente', async () => {
+        const wrapper = mount(ProductRatingModal, {
+            props: {
+                modelValue: true,
+                initialStep: 'dati',
+                initialForm: {
+                    barcode: '800123',
+                    name: 'Yogurt',
+                    image_url: 'https://example.test/yogurt.jpg',
+                    rating: 'ok',
+                },
+                ratingId: 42,
+            },
+        });
+
+        await flushPromises();
+        const removeButton = wrapper.find('[data-test="remove-rating"]');
+        expect(removeButton.exists()).toBe(true);
+        expect(removeButton.text()).toContain('Rimuovi valutazione');
+    });
+
+    it('elimina la valutazione quando clicca il pulsante Rimuovi', async () => {
+        axiosMock.delete.mockResolvedValue({ data: { message: 'Valutazione eliminata' } });
+
+        const wrapper = mount(ProductRatingModal, {
+            props: {
+                modelValue: true,
+                initialStep: 'dati',
+                initialForm: {
+                    barcode: '800123',
+                    name: 'Yogurt',
+                    image_url: 'https://example.test/yogurt.jpg',
+                    rating: 'ok',
+                },
+                ratingId: 42,
+            },
+        });
+
+        await flushPromises();
+        await wrapper.get('[data-test="remove-rating"]').trigger('click');
+        await flushPromises();
+
+        expect(axiosMock.delete).toHaveBeenCalledWith('/api/rate/42');
+        expect(wrapper.emitted().saved).toBeTruthy();
+        expect(wrapper.emitted()['update:modelValue']).toContainEqual([false]);
+    });
 });

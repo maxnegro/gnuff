@@ -19,6 +19,7 @@ const page = usePage()
 const showManualForm = ref(false)
 const manualStep = ref('ean')
 const manualForm = ref({ barcode: '', name: '', image_url: '', rating: '' })
+const manualRatingId = ref(null)
 
 async function openEditModal(rating) {
   // Se manca l'immagine o è il placeholder, prova a recuperare da OpenFoodFacts
@@ -41,12 +42,14 @@ async function openEditModal(rating) {
     image_url,
     rating: rating.rating || '',
   }
+  manualRatingId.value = rating.id
   manualStep.value = 'dati'
   showManualForm.value = true
 }
 
 function openNewModal() {
   manualForm.value = { barcode: '', name: '', image_url: '', rating: '' }
+  manualRatingId.value = null
   manualStep.value = 'ean'
   showManualForm.value = true
 }
@@ -92,7 +95,7 @@ watch(
           </div>
         </div>
 
-        <ProductRatingModal v-model="showManualForm" :initial-step="manualStep" :initial-form="manualForm"
+        <ProductRatingModal v-model="showManualForm" :initial-step="manualStep" :initial-form="manualForm" :rating-id="manualRatingId"
           @saved="() => router.reload({ only: ['ratings'] })" />
 
         <div v-if="ratings.length" class="app-panel app-panel-pad">
