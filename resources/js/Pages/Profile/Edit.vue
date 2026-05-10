@@ -19,8 +19,6 @@ defineProps({
     <Head title="Profilo" />
 
     <AuthenticatedLayout>
-
-
         <div class="py-8 sm:py-12">
             <div class="mx-auto max-w-4xl space-y-6 sm:px-6 lg:px-8">
                 <div class="app-panel p-6 sm:p-8">
