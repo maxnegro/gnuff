@@ -41,9 +41,28 @@ class HandleInertiaRequests extends Middleware
             'shared' => fn () => $request->user()
                 ? $request->user()->sharedProductLists()->with(['users', 'products', 'owner'])->get()
                 : [],
-            'active_list' => fn () => $request->user() && $request->session()->get('active_list_id')
-                ? ($request->user()->ownedProductLists->concat($request->user()->sharedProductLists)->firstWhere('id', $request->session()->get('active_list_id')))
-                : null,
+            'active_list' => function () use ($request) {
+                if (! $request->user()) {
+                    return null;
+                }
+
+                $all = $request->user()->ownedProductLists->concat($request->user()->sharedProductLists);
+                $sessionListId = $request->session()->get('active_list_id');
+                $active = $sessionListId ? $all->firstWhere('id', $sessionListId) : null;
+
+                // Auto-inizializza la sessione se active_list_id non è impostata o non è più valida
+                if (! $active) {
+                    $active = $all->firstWhere('id', $request->user()->selected_list_id)
+                        ?? $all->firstWhere(fn ($l) => strtolower($l->name) === 'default')
+                        ?? $all->first();
+
+                    if ($active) {
+                        $request->session()->put('active_list_id', $active->id);
+                    }
+                }
+
+                return $active;
+            },
         ];
     }
 }
