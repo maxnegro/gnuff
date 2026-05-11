@@ -1,17 +1,20 @@
 <?php
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use HasFactory;
 use App\Enums\RatingEnum;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\ValidationException;
 
 class Rating extends Model
 {
-    protected $fillable = ['product_list_id', 'product_id', 'rating'];
+    protected $fillable = ['product_list_id', 'product_id', 'rating', 'author_name'];
 
     /**
      * Validator instance for validation errors.
-     * @var \Illuminate\Contracts\Validation\Validator|null
+     *
+     * @var Validator|null
      */
     protected $validator;
 
@@ -19,13 +22,13 @@ class Rating extends Model
         'rating' => RatingEnum::class,
     ];
 
-
     public function rules()
     {
         return [
             'product_list_id' => 'required|integer',
             'product_id' => 'required|integer',
-            'rating' => 'required|in:' . implode(',', RatingEnum::values()),
+            'rating' => 'required|in:'.implode(',', RatingEnum::values()),
+            'author_name' => 'nullable|string|max:255',
         ];
     }
 
@@ -41,13 +44,14 @@ class Rating extends Model
 
     public function save(array $options = [])
     {
-        if (!$this->validate()) {
-            throw new \Illuminate\Validation\ValidationException($this->validator);
+        if (! $this->validate()) {
+            throw new ValidationException($this->validator);
         }
         // Rimuovi la proprietà validator prima del salvataggio
         $attributes = $this->getAttributes();
         unset($attributes['validator']);
         $this->setRawAttributes($attributes);
+
         return parent::save($options);
     }
 
@@ -56,8 +60,10 @@ class Rating extends Model
         $validator = \Illuminate\Support\Facades\Validator::make($this->attributes, $this->rules());
         if ($validator->fails()) {
             $this->validator = $validator;
+
             return false;
         }
+
         return true;
     }
 
@@ -65,8 +71,8 @@ class Rating extends Model
     {
         parent::boot();
         static::creating(function ($model) {
-            if (!$model->validate()) {
-                throw new \Illuminate\Validation\ValidationException($model->validator);
+            if (! $model->validate()) {
+                throw new ValidationException($model->validator);
             }
         });
     }

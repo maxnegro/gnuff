@@ -112,6 +112,7 @@ class ApiIntegrationTest extends TestCase
         $this->assertDatabaseHas('ratings', [
             'product_list_id' => $productList->id,
             'rating' => 'gnuf',
+            'author_name' => $user->name,
         ]);
     }
 

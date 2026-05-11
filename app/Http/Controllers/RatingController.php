@@ -72,6 +72,7 @@ class RatingController extends Controller
                 ],
                 [
                     'rating' => $request->value,
+                    'author_name' => $request->user()?->name,
                 ]
             );
 
@@ -120,6 +121,7 @@ class RatingController extends Controller
                 'value' => 'required|in:gnuf,ok,meh,bleah',
             ]);
             $rating->rating = $request->value;
+            $rating->author_name = $request->user()?->name;
             $rating->save();
 
             return response()->json(['message' => 'Valutazione aggiornata', 'rating' => $rating]);

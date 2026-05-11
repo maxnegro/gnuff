@@ -115,6 +115,9 @@ watch(
                     <span v-if="rating.product_list && rating.product_list.name">
                       in <span class="font-medium">{{ rating.product_list.name }}</span>
                     </span>
+                    <span v-if="rating.author_name">
+                      da <span class="font-medium">{{ rating.author_name }}</span>
+                    </span>
                   </p>
                 </div>
               </div>
