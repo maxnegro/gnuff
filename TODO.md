@@ -96,3 +96,80 @@
 - Verificare sempre le modifiche con `./vendo/bin/sail npm run build` e `./vendor/bin/sail artisan migrate`  
 - Mantenere il codice conforme alle convenzioni Laravel e Inertia.js
 
+---
+
+## Piano: Upload + Crop Immagini Prodotto nel modulo valutazione
+
+### Obiettivo
+Aggiungere all’attuale modulo di valutazione prodotto la possibilità di sostituire l’immagine prodotto eventualmente esistente caricando una nuova immagine da file locale o fotocamera, ritagliandola in formato quadrato e ridimensionandola prima del salvataggio.
+
+### Modulo interessato
+- Modulo valutazione prodotto: `resources/js/Components/ProductRatingModal.vue`
+
+### Ambito funzionale
+- La funzionalità deve essere integrata nel flusso già esistente della modale di valutazione prodotto.
+- L’utente deve poter sostituire l’immagine prodotto corrente dalla sezione dati prodotto.
+- Il caricamento può avvenire tramite selezione file o fotocamera, dove supportato dal dispositivo.
+- Dopo la selezione, l’utente deve poter ritagliare l’immagine in rapporto 1:1.
+- L’immagine ritagliata deve essere ridimensionata in una thumbnail quadrata compatta prima del salvataggio.
+- La nuova immagine deve sostituire quella eventualmente già presente, non aggiungere una galleria separata.
+- Il salvataggio deve aggiornare il prodotto corrente mantenendo coerenti nome, barcode e valutazione in corso.
+- L’input manuale per URL immagine può rimanere disponibile come alternativa al caricamento locale.
+
+### Requisiti frontend
+- Il modulo deve mostrare l’immagine prodotto corrente o il placeholder quando l’immagine non è disponibile.
+- L’utente deve poter avviare il cambio immagine dalla preview o da un pulsante dedicato.
+- L’interfaccia deve consentire sia l’inserimento di un URL immagine sia il caricamento locale.
+- Dopo la scelta di un file o di una foto da fotocamera, deve aprirsi una modale di crop.
+- Il crop deve essere quadrato e deve produrre un’immagine finale ridimensionata e pronta per l’upload.
+- Durante il salvataggio deve essere mostrato uno stato di caricamento.
+- In caso di errore, il modulo deve mantenere lo stato corrente e mostrare un messaggio chiaro.
+- Dopo il salvataggio riuscito, la preview prodotto deve mostrare immediatamente la nuova immagine.
+
+### Requisiti backend
+- Il backend deve accettare la nuova immagine già ritagliata e ridimensionata dal frontend.
+- Deve validare che il payload ricevuto sia un’immagine valida.
+- Deve salvare l’immagine in storage locale pubblico.
+- Deve aggiornare il prodotto sostituendo il valore immagine precedente.
+- Deve gestire correttamente il caso in cui il prodotto non abbia ancora un’immagine.
+- Deve restituire l’URL utilizzabile dalla UI.
+- Deve proteggere il salvataggio da payload troppo grandi, formati non supportati o richieste non valide.
+
+### Regole di sostituzione
+- La nuova immagine caricata sostituisce sempre l’immagine prodotto corrente.
+- Se esiste già un’immagine precedente, questa non deve più essere considerata immagine principale dopo il salvataggio riuscito.
+- Se il salvataggio fallisce, l’immagine precedente deve rimanere visibile e valida nel modulo.
+- Il flusso non deve richiedere modifiche allo schema database se può essere gestito con il campo immagine prodotto esistente.
+
+### Sicurezza e qualità
+- Validare lato server ogni immagine ricevuta.
+- Limitare dimensione massima e formati accettati.
+- Gestire orientamento EXIF e normalizzare l’immagine prima del salvataggio.
+- Evitare di fidarsi esclusivamente del risultato lato client.
+- Prevedere protezione CSRF e autorizzazione coerente con il contesto prodotto.
+- Rimuovere o neutralizzare metadati sensibili quando possibile.
+
+### Test richiesti
+- Test frontend del flusso di apertura cambio immagine dal modulo valutazione.
+- Test del caricamento file/fotocamera e della modale di crop.
+- Test del ridimensionamento in thumbnail quadrata.
+- Test backend del salvataggio immagine con storage fake.
+- Test di sostituzione immagine esistente.
+- Test del caso senza immagine precedente.
+- Test di immagini non valide, troppo grandi o con formato non supportato.
+- Verifica manuale su desktop e mobile.
+- Verifica con immagini landscape, portrait e già quadrate.
+
+### Criteri di accettazione
+- La funzionalità è integrata nell’attuale modulo di valutazione prodotto.
+- L’utente può sostituire l’immagine prodotto da file o fotocamera.
+- Dopo il crop, l’immagine viene ridimensionata in formato quadrato.
+- La nuova immagine sostituisce quella eventualmente esistente.
+- Dopo il salvataggio, la preview prodotto mostra la nuova immagine.
+- Gli errori non cancellano l’immagine precedente.
+- Il backend salva solo immagini valide e controllate.
+- Il flusso non richiede modifiche allo schema database.
+
+### Rollback
+- Prevedere una strategia di rollback per tornare all’immagine precedente in caso di salvataggio fallito o comportamento non desiderato.
+- Non aggiornare l’immagine principale finché il salvataggio non è confermato.
