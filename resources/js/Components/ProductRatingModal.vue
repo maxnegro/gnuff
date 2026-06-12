@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import axios from 'axios'
+import ImageCropModal from './ImageCropModal.vue'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -23,6 +24,11 @@ const manualFormLoading = ref(false)
 const manualProductFound = ref(false)
 const showImageInput = ref(false)
 const newImageUrl = ref('')
+const showImageCropModal = ref(false)
+const imageCropModalRef = ref(null)
+const fileInputRef = ref(null)
+const cameraInputRef = ref(null)
+const imageUploadLoading = ref(false)
 
 // Ref per l'input EAN
 const eanInputRef = ref(null)
@@ -144,6 +150,81 @@ async function updateImageUrl() {
   }
 }
 
+/**
+ * Handle image file selection and open crop modal
+ */
+async function handleImageFileSelected(event) {
+  const target = event.target
+  const file = target.files?.[0]
+  if (!file) return
+
+  try {
+    await imageCropModalRef.value?.loadImageFromFile(file)
+    showImageCropModal.value = true
+  } catch (e) {
+    manualFormError.value = 'Errore nel caricamento dell\'immagine'
+  }
+
+  // Reset input
+  if (fileInputRef.value) {
+    fileInputRef.value.value = ''
+  }
+}
+
+/**
+ * Handle camera capture and open crop modal
+ */
+async function handleCameraCapture(event) {
+  const target = event.target
+  const file = target.files?.[0]
+  if (!file) return
+
+  try {
+    await imageCropModalRef.value?.loadImageFromFile(file)
+    showImageCropModal.value = true
+  } catch (e) {
+    manualFormError.value = 'Errore nel caricamento della foto'
+  }
+
+  // Reset input
+  if (cameraInputRef.value) {
+    cameraInputRef.value.value = ''
+  }
+}
+
+/**
+ * Handle cropped image confirmation
+ */
+async function handleImageCropConfirm(base64) {
+  imageUploadLoading.value = true
+  manualFormError.value = ''
+
+  try {
+    const response = await axios.post(`/product/${manualForm.value.barcode}/image`, {
+      image_base64: base64,
+    })
+
+    if (response.data.success) {
+      manualForm.value.image_url = response.data.image_url
+      showImageInput.value = false
+      newImageUrl.value = ''
+    } else {
+      manualFormError.value = response.data.message || 'Errore durante l\'upload'
+    }
+  } catch (e) {
+    if (e.response?.data?.message) {
+      manualFormError.value = e.response.data.message
+    } else if (e.response?.data?.error) {
+      manualFormError.value = e.response.data.error
+    } else {
+      manualFormError.value = 'Errore durante l\'upload dell\'immagine'
+    }
+  } finally {
+    imageUploadLoading.value = false
+    showImageCropModal.value = false
+  }
+}
+
 async function removeRating() {
   manualFormError.value = ''
   manualFormLoading.value = true
@@ -236,10 +317,51 @@ async function submitManualForm() {
         </div>
         <div v-if="showImageInput" class="flex flex-col gap-2 mb-2">
           <input v-model="newImageUrl" type="url" placeholder="Nuovo URL immagine" class="app-input" />
-          <div class="flex gap-2">
-<button @click="updateImageUrl" type="button" class="app-button-primary flex-1">Salva immagine</button>
-<button @click="showImageInput = false" type="button" class="app-button-secondary flex-1">Annulla</button>
+          <div class="flex gap-2 flex-wrap">
+            <button
+              @click="updateImageUrl"
+              type="button"
+              :disabled="imageUploadLoading"
+              class="flex-1 app-button-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Salva URL
+            </button>
+            <button
+              @click="fileInputRef?.click()"
+              type="button"
+              :disabled="imageUploadLoading"
+              class="flex-1 app-button-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              📁 File
+            </button>
+            <button
+              @click="cameraInputRef?.click()"
+              type="button"
+              :disabled="imageUploadLoading"
+              class="flex-1 app-button-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              📷 Foto
+            </button>
+            <button @click="showImageInput = false" type="button" class="flex-1 app-button-secondary">
+              Annulla
+            </button>
           </div>
+          <!-- Hidden file inputs -->
+          <input
+            ref="fileInputRef"
+            type="file"
+            accept="image/*"
+            class="hidden"
+            @change="handleImageFileSelected"
+          />
+          <input
+            ref="cameraInputRef"
+            type="file"
+            accept="image/*"
+            capture="environment"
+            class="hidden"
+            @change="handleCameraCapture"
+          />
         </div>
         <form @submit.prevent="submitManualForm" class="flex flex-col gap-3">
           <input v-model="manualForm.name" type="text" placeholder="Nome prodotto" class="app-input" required />
@@ -275,4 +397,11 @@ async function submitManualForm() {
       </div>
     </div>
   </div>
+  <!-- Image Crop Modal -->
+  <ImageCropModal
+    ref="imageCropModalRef"
+    :is-open="showImageCropModal"
+    @close="showImageCropModal = false"
+    @confirm="handleImageCropConfirm"
+  />
 </template>

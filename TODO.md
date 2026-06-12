@@ -1,11 +1,84 @@
 # TODO: Miglioramenti Interfaccia Utente e Ottimizzazione Codice
 
+## Piano Implementazione: Upload e Crop Immagini Prodotto
+
+### FASE 1: Backend CRUD ✓
+#### Step 1.1: Preparazione e validazione ✓
+- [x] Analizzato modello Product (campo `image_url`)
+- [x] Analizzato ProductImageCacheService per pattern di percorso
+- [x] Creato UpdateProductImageRequest con validazione Base64
+- [x] Definiti formati supportati: JPEG, PNG, WebP
+- [x] Impostato limite massimo: 5MB
+- [x] Implementata protezione CSRF
+
+#### Step 1.2: Controller action updateImage() ✓
+- [x] Creato endpoint POST /product/{barcode}/image
+- [x] Implementato parsing della URI Base64 
+- [x] Creato metodo normalizeImageContent() con rimozione EXIF
+- [x] Creato metodo saveImageToStorage() con percorsi a due livelli
+- [x] Integrato Product create/update logic
+- [x] Configurate risposte JSON
+- [x] Applicato Pint formatting
+
+#### Step 1.3: Test backend ✓
+- [x] Test: valida Base64 image upload
+- [x] Test: rimpiazza immagine esistente
+- [x] Test: crea prodotto se non esiste
+- [x] Test: rifiuta Base64 non valida
+- [x] Test: rifiuta immagine troppo grande
+- [x] Test: rifiuta formato non supportato
+- [x] Test: richiede autenticazione
+
+### FASE 2: Frontend - In Progress
+#### Step 2.1: Composable useImageCropper [✓]
+- [x] Creare `resources/js/composables/useImageCropper.ts`
+- [x] Implementare canvas 2D per rendering immagine
+- [x] Implementare resize/crop logic
+- [x] Implementare zoom e pan controls
+- [x] Implementare conversione in Base64
+
+#### Step 2.2: ImageCropModal component [✓]
+- [x] Creare `resources/js/Pages/Components/ImageCropModal.vue`
+- [x] Canvas per preview e crop
+- [x] Zoom slider control
+- [x] Pulsanti Confirm/Cancel
+- [x] Overlay semi-trasparente
+
+#### Step 2.3: ProductRatingModal integration [✓]
+- [x] Aggiungere pulsante "Cambia Immagine" a ProductRatingModal
+- [x] File input hidden per upload da dispositivo
+- [x] Camera input per foto da fotocamera (mobile)
+- [x] Trigger ImageCropModal
+- [x] Implementare POST a /product/{barcode}/image
+- [x] Aggiornare UI con immagine dopo upload
+
+#### Step 2.4: Component tests [ ]
+- [ ] Test: ImageCropModal rendering
+- [ ] Test: Canvas zoom e pan
+- [ ] Test: Base64 conversion
+- [ ] Test: ProductRatingModal integration
+
+### FASE 3: Integration
+#### Step 3.1: End-to-end test [ ]
+- [ ] Test: upload → crop → POST → UI update
+- [ ] Test: image replacement workflow
+- [ ] Test: error handling completo
+
+#### Step 3.2: Manual testing [ ]
+- [ ] Testare su desktop (Chrome, Firefox, Safari)
+- [ ] Testare su mobile (iOS, Android)
+- [ ] Testare con diverse dimensioni immagine
+- [ ] Testare performance con immagini grandi
+
+---
+
 ## Obiettivi
 - Migliorare l'estetica e l'usabilità dell'interfaccia utente
 - Ottimizzare l'efficienza del codice e la manutenibilità
 - Implementare funzionalità avanzate per un'esperienza più fluida
 
 ## Task
+
 
 ### 1. Analisi e Ottimizzazione UI
 - [ ] **Rivedere il layout principale**
@@ -101,75 +174,130 @@
 ## Piano: Upload + Crop Immagini Prodotto nel modulo valutazione
 
 ### Obiettivo
-Aggiungere all’attuale modulo di valutazione prodotto la possibilità di sostituire l’immagine prodotto eventualmente esistente caricando una nuova immagine da file locale o fotocamera, ritagliandola in formato quadrato e ridimensionandola prima del salvataggio.
+Aggiungere all'attuale modulo di valutazione prodotto la possibilità di sostituire l'immagine prodotto eventualmente esistente caricando una nuova immagine da file locale o fotocamera, ritagliandola in formato quadrato e ridimensionandola prima del salvataggio.
 
-### Modulo interessato
-- Modulo valutazione prodotto: `resources/js/Components/ProductRatingModal.vue`
+**Modulo interessato:** `resources/js/Components/ProductRatingModal.vue`
 
-### Ambito funzionale
-- La funzionalità deve essere integrata nel flusso già esistente della modale di valutazione prodotto.
-- L’utente deve poter sostituire l’immagine prodotto corrente dalla sezione dati prodotto.
-- Il caricamento può avvenire tramite selezione file o fotocamera, dove supportato dal dispositivo.
-- Dopo la selezione, l’utente deve poter ritagliare l’immagine in rapporto 1:1.
-- L’immagine ritagliata deve essere ridimensionata in una thumbnail quadrata compatta prima del salvataggio.
-- La nuova immagine deve sostituire quella eventualmente già presente, non aggiungere una galleria separata.
-- Il salvataggio deve aggiornare il prodotto corrente mantenendo coerenti nome, barcode e valutazione in corso.
-- L’input manuale per URL immagine può rimanere disponibile come alternativa al caricamento locale.
+### Riferimenti di implementazione
 
-### Requisiti frontend
-- Il modulo deve mostrare l’immagine prodotto corrente o il placeholder quando l’immagine non è disponibile.
-- L’utente deve poter avviare il cambio immagine dalla preview o da un pulsante dedicato.
-- L’interfaccia deve consentire sia l’inserimento di un URL immagine sia il caricamento locale.
-- Dopo la scelta di un file o di una foto da fotocamera, deve aprirsi una modale di crop.
-- Il crop deve essere quadrato e deve produrre un’immagine finale ridimensionata e pronta per l’upload.
-- Durante il salvataggio deve essere mostrato uno stato di caricamento.
-- In caso di errore, il modulo deve mantenere lo stato corrente e mostrare un messaggio chiaro.
-- Dopo il salvataggio riuscito, la preview prodotto deve mostrare immediatamente la nuova immagine.
+#### Ambito funzionale
+- La funzionalità deve essere integrata nel flusso già esistente della modale di valutazione prodotto
+- L'utente può sostituire l'immagine prodotto corrente dalla sezione dati prodotto
+- Il caricamento avviene tramite selezione file o fotocamera (dove supportato)
+- Dopo la selezione, modale di crop in rapporto 1:1
+- L'immagine ritagliata viene ridimensionata in thumbnail quadrata compatta
+- La nuova immagine sostituisce quella eventualmente già presente (non galleria separata)
+- Il salvataggio aggiorna il prodotto mantenendo coerenti nome, barcode e valutazione
+- L'input manuale per URL immagine rimane disponibile come alternativa
 
-### Requisiti backend
-- Il backend deve accettare la nuova immagine già ritagliata e ridimensionata dal frontend.
-- Deve validare che il payload ricevuto sia un’immagine valida.
-- Deve salvare l’immagine in storage locale pubblico.
-- Deve aggiornare il prodotto sostituendo il valore immagine precedente.
-- Deve gestire correttamente il caso in cui il prodotto non abbia ancora un’immagine.
-- Deve restituire l’URL utilizzabile dalla UI.
-- Deve proteggere il salvataggio da payload troppo grandi, formati non supportati o richieste non valide.
+#### Requisiti frontend
+- Mostrare immagine prodotto corrente o placeholder
+- Pulsante dedicato per avviare cambio immagine dalla preview
+- Interfaccia per inserimento URL immagine E caricamento locale
+- Modale di crop con canvas e zoom slider
+- Output immagine quadrata ridimensionata e pronta per upload
+- Loading state durante salvataggio
+- Messaggio di errore chiaro; stato attuale mantenuto in caso di fallimento
+- Preview aggiornata immediatamente dopo salvataggio riuscito
 
-### Regole di sostituzione
-- La nuova immagine caricata sostituisce sempre l’immagine prodotto corrente.
-- Se esiste già un’immagine precedente, questa non deve più essere considerata immagine principale dopo il salvataggio riuscito.
-- Se il salvataggio fallisce, l’immagine precedente deve rimanere visibile e valida nel modulo.
-- Il flusso non deve richiedere modifiche allo schema database se può essere gestito con il campo immagine prodotto esistente.
+#### Requisiti backend
+- Accettare immagine Base64 già ritagliata e ridimensionata dal frontend
+- Validare che il payload sia un'immagine valida (jpg, png, webp)
+- Salvare in storage locale pubblico
+- Aggiornare Product model (sostituire valore immagine precedente)
+- Gestire caso: nessuna immagine precedente
+- Restituire URL utilizzabile dalla UI
+- Proteggere da payload troppo grandi (max 5MB), formati non supportati, richieste non valide
+- Validare lato server OGNI immagine ricevuta
+- Gestire EXIF e normalizzare immagine
+- Rimuovere/neutralizzare metadati sensibili
+- CSRF protection e autorizzazione coerente
 
-### Sicurezza e qualità
-- Validare lato server ogni immagine ricevuta.
-- Limitare dimensione massima e formati accettati.
-- Gestire orientamento EXIF e normalizzare l’immagine prima del salvataggio.
-- Evitare di fidarsi esclusivamente del risultato lato client.
-- Prevedere protezione CSRF e autorizzazione coerente con il contesto prodotto.
-- Rimuovere o neutralizzare metadati sensibili quando possibile.
+---
 
-### Test richiesti
-- Test frontend del flusso di apertura cambio immagine dal modulo valutazione.
-- Test del caricamento file/fotocamera e della modale di crop.
-- Test del ridimensionamento in thumbnail quadrata.
-- Test backend del salvataggio immagine con storage fake.
-- Test di sostituzione immagine esistente.
-- Test del caso senza immagine precedente.
-- Test di immagini non valide, troppo grandi o con formato non supportato.
-- Verifica manuale su desktop e mobile.
-- Verifica con immagini landscape, portrait e già quadrate.
+### Piano di implementazione
+
+#### FASE 1: BACKEND - Fondamenti
+
+**Step 1.1: Preparazione e validazione** [✓]
+- [x] Analizzare Product model e campo `image_url` (è `image_url`, non `image`)
+- [x] Definire regole validazione immagine: formati (jpg, png, webp), max 5MB
+- [x] Creare `UpdateProductImageRequest` con validazioni CSRF e autorizzazione
+
+**Step 1.2: Controller action** [✓]
+- [x] Creare action `updateProductImage` in Products controller
+- [x] Ricevere immagine Base64, validare, salvare in storage pubblico
+- [x] Gestire EXIF, normalizzare immagine (rimuovere metadati)
+- [x] Aggiornare Product model
+- [x] Restituire URL nuova immagine
+
+**Step 1.3: Test backend** [ ]
+- [ ] Test endpoint con immagine valida
+- [ ] Test sostituzione immagine esistente
+- [ ] Test caso senza immagine precedente
+- [ ] Test validazioni (formato, dimensione, errori)
+
+#### FASE 2: FRONTEND - Componenti
+
+**Step 2.1: Composables e utility** [ ]
+- [ ] Creare `composable useImageCropper.ts` (canvas 2D, resize, base64)
+- [ ] Creare `utils/imageFileValidation.ts` (check tipo, dimensione)
+- [ ] Creare `utils/imageConverter.ts` (file → canvas → base64)
+
+**Step 2.2: Modale di crop** [ ]
+- [ ] Creare componente `ImageCropModal.vue`
+  - [ ] Canvas per preview
+  - [ ] Slider per zoom
+  - [ ] Pulsanti confirm/cancel
+  - [ ] Output immagine quadrata ridimensionata (es. 400x400px)
+
+**Step 2.3: Integrazione in ProductRatingModal** [ ]
+- [ ] Aggiungere sezione cambio immagine (preview + button)
+- [ ] File input per desktop + fotocamera per mobile
+- [ ] Collegare a ImageCropModal
+- [ ] Loading state durante upload
+- [ ] Gestire errori e messaggi utente
+- [ ] Update preview dopo salvataggio
+
+**Step 2.4: Test frontend** [ ]
+- [ ] Test apertura/chiusura ImageCropModal
+- [ ] Test upload file desktop
+- [ ] Test caricamento fotocamera (mock)
+- [ ] Test ridimensionamento immagine
+- [ ] Test invio base64 al backend
+- [ ] Test aggiornamento preview post-salvataggio
+
+#### FASE 3: Integrazione & Verifica
+
+**Step 3.1: Connessione end-to-end** [ ]
+- [ ] Verificare flusso completo: upload → crop → backend → UI
+- [ ] Test errore backend → messaggio utente
+- [ ] Test rollback se errore (immagine precedente rimane visibile)
+
+**Step 3.2: Test manuale cross-device** [ ]
+- [ ] Desktop: upload file
+- [ ] Mobile: fotocamera + file
+- [ ] Immagini landscape, portrait, quadrate
+- [ ] Browser testing su dispositivi diversi
+
+---
 
 ### Criteri di accettazione
-- La funzionalità è integrata nell’attuale modulo di valutazione prodotto.
-- L’utente può sostituire l’immagine prodotto da file o fotocamera.
-- Dopo il crop, l’immagine viene ridimensionata in formato quadrato.
-- La nuova immagine sostituisce quella eventualmente esistente.
-- Dopo il salvataggio, la preview prodotto mostra la nuova immagine.
-- Gli errori non cancellano l’immagine precedente.
-- Il backend salva solo immagini valide e controllate.
-- Il flusso non richiede modifiche allo schema database.
+- [x] Piano di implementazione definito e approvato
+- [ ] La funzionalità è integrata nell'attuale modulo di valutazione prodotto
+- [ ] L'utente può sostituire l'immagine prodotto da file o fotocamera
+- [ ] Dopo il crop, l'immagine viene ridimensionata in formato quadrato (400x400px)
+- [ ] La nuova immagine sostituisce quella eventualmente esistente
+- [ ] Dopo il salvataggio, la preview prodotto mostra la nuova immagine
+- [ ] Gli errori non cancellano l'immagine precedente
+- [ ] Il backend salva solo immagini valide e controllate
+- [ ] Il flusso non richiede modifiche allo schema database
+- [ ] Test backend e frontend passano
+- [ ] Verificato su desktop e mobile
 
-### Rollback
-- Prevedere una strategia di rollback per tornare all’immagine precedente in caso di salvataggio fallito o comportamento non desiderato.
-- Non aggiornare l’immagine principale finché il salvataggio non è confermato.
+### Strategie di sicurezza e rollback
+- Backend valida OGNI immagine prima di salvare
+- Immagine precedente NON aggiornata finché backend non conferma successo
+- In caso di errore backend, immagine precedente rimane visibile e valida nel modulo
+- Metadati sensibili rimossi prima del salvataggio
+- Protezione CSRF e autorizzazione coerente con contesto prodotto

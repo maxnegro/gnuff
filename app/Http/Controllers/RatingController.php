@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductList;
 use App\Models\Rating;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -40,6 +41,32 @@ class RatingController extends Controller
         ], $status);
     }
 
+    private function resolveActiveList(Request $request): ?ProductList
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            return null;
+        }
+
+        $owned = $user->ownedProductLists()->get();
+        $shared = $user->sharedProductLists()->get();
+        $all = $owned->concat($shared)->unique('id')->values();
+
+        $activeListId = session('active_list_id')
+            ?? $user->selected_list_id;
+
+        if ($activeListId) {
+            $active = $all->firstWhere('id', $activeListId);
+            if ($active) {
+                return $active;
+            }
+        }
+
+        return $all->firstWhere(fn ($list) => strtolower($list->name) === 'default')
+            ?? $all->first();
+    }
+
     public function store(Request $request): JsonResponse
     {
         try {
@@ -56,8 +83,8 @@ class RatingController extends Controller
                 ]
             );
 
-            $activeListId = session('active_list_id');
-            if (! $activeListId) {
+            $activeList = $this->resolveActiveList($request);
+            if (! $activeList) {
                 return $this->errorResponse(
                     'ACTIVE_LIST_MISSING',
                     'Nessuna lista attiva selezionata',
@@ -67,7 +94,7 @@ class RatingController extends Controller
 
             $rating = Rating::updateOrCreate(
                 [
-                    'product_list_id' => $activeListId,
+                    'product_list_id' => $activeList->id,
                     'product_id' => $product->id,
                 ],
                 [

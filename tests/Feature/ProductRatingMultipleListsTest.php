@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Enums\RatingEnum;
 use App\Models\Product;
 use App\Models\ProductList;
 use App\Models\Rating;
-use App\Enums\RatingEnum;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -42,6 +42,29 @@ class ProductRatingMultipleListsTest extends TestCase
             'product_list_id' => $list2->id,
             'product_id' => $product->id,
             'rating' => RatingEnum::OK->value,
+        ]);
+    }
+
+    public function test_can_save_rating_when_active_list_is_only_persisted_on_user(): void
+    {
+        $user = User::factory()->create();
+        $product = Product::factory()->create();
+        $activeList = ProductList::factory()->create(['owner_id' => $user->id]);
+
+        $user->selected_list_id = $activeList->id;
+        $user->save();
+
+        $this->actingAs($user)
+            ->postJson('/rate', [
+                'barcode' => $product->barcode,
+                'value' => RatingEnum::GNUF->value,
+            ])
+            ->assertOk();
+
+        $this->assertDatabaseHas('ratings', [
+            'product_list_id' => $activeList->id,
+            'product_id' => $product->id,
+            'rating' => RatingEnum::GNUF->value,
         ]);
     }
 }

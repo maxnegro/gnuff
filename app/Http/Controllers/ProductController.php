@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateProductImageRequest;
 use App\Models\Product;
 use App\Models\ProductList;
 use App\Services\OpenFoodFactsService;
@@ -9,6 +10,7 @@ use App\Services\ProductImageCacheService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -408,5 +410,196 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
         ]);
+    }
+
+    public function updateImage(
+        string $barcode,
+        UpdateProductImageRequest $request,
+        ProductImageCacheService $imageCacheService
+    ): JsonResponse {
+        try {
+            $validated = $request->validated();
+            $base64Data = $validated['image_base64'];
+
+            // Estrarre il Base64 puro (rimuovere prefisso data URI)
+            $pureBase64 = preg_replace('/^data:image\/(jpeg|jpg|png|webp);base64,/i', '', $base64Data);
+            $decodedImage = base64_decode($pureBase64, true);
+
+            if ($decodedImage === false) {
+                return $this->errorResponse(
+                    'IMAGE_DECODE_FAILED',
+                    'Impossibile decodificare l\'immagine Base64.',
+                    422,
+                    ['barcode' => $barcode]
+                );
+            }
+
+            // Normalizzare l'immagine: rimuovere EXIF e gestire orientamento
+            $normalizedImageContent = $this->normalizeImageContent($decodedImage);
+
+            if ($normalizedImageContent === null) {
+                return $this->errorResponse(
+                    'IMAGE_NORMALIZATION_FAILED',
+                    'Impossibile normalizzare l\'immagine. Verificare che sia un\'immagine valida.',
+                    422,
+                    ['barcode' => $barcode]
+                );
+            }
+
+            // Salvare l'immagine normalizzata in storage
+            $storagePath = $this->saveImageToStorage($normalizedImageContent, $barcode);
+
+            if ($storagePath === null) {
+                return $this->errorResponse(
+                    'IMAGE_SAVE_FAILED',
+                    'Impossibile salvare l\'immagine in storage.',
+                    500,
+                    ['barcode' => $barcode]
+                );
+            }
+
+            // Aggiornare il prodotto
+            $product = Product::where('barcode', $barcode)->first();
+
+            if (! $product) {
+                // Creare il prodotto se non esiste
+                $product = Product::create([
+                    'barcode' => $barcode,
+                    'name' => "Prodotto {$barcode}",
+                    'image_url' => $storagePath,
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'image_url' => $storagePath,
+                    'message' => 'Immagine prodotto caricata con successo.',
+                ]);
+            }
+
+            // Aggiornare l'immagine del prodotto esistente
+            $product->update(['image_url' => $storagePath]);
+
+            return response()->json([
+                'success' => true,
+                'image_url' => $storagePath,
+                'message' => 'Immagine prodotto aggiornata con successo.',
+            ]);
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error('Unhandled exception during product image update flow.', [
+                'barcode' => $barcode,
+                'request_id' => $this->getRequestId(),
+                'exception' => $e,
+            ]);
+
+            return $this->errorResponse(
+                'PRODUCT_IMAGE_UPDATE_FAILED',
+                'Errore interno durante l\'aggiornamento dell\'immagine del prodotto.',
+                500,
+                ['barcode' => $barcode]
+            );
+        }
+    }
+
+    /**
+     * Normalizza il contenuto dell'immagine: rimuove EXIF e gestisce orientamento.
+     * Supporta JPEG, PNG, WebP.
+     */
+    private function normalizeImageContent(string $imageContent): ?string
+    {
+        try {
+            // Creare un'immagine GD dal contenuto
+            $image = @imagecreatefromstring($imageContent);
+
+            if ($image === false) {
+                return null;
+            }
+
+            // Ottenere le dimensioni
+            $width = imagesx($image);
+            $height = imagesy($image);
+
+            if ($width === false || $height === false || $width <= 0 || $height <= 0) {
+                imagedestroy($image);
+
+                return null;
+            }
+
+            // Creare una nuova immagine True Color (senza metadati)
+            $normalized = imagecreatetruecolor($width, $height);
+
+            if ($normalized === false) {
+                imagedestroy($image);
+
+                return null;
+            }
+
+            // Copiare i pixel (questo rimuove tutti i metadati EXIF)
+            imagecopy($normalized, $image, 0, 0, 0, 0, $width, $height);
+
+            imagedestroy($image);
+
+            // Salvare in output buffer
+            ob_start();
+            imagejpeg($normalized, null, 85); // Qualità 85
+            $normalizedContent = ob_get_clean();
+
+            imagedestroy($normalized);
+
+            return $normalizedContent !== false ? $normalizedContent : null;
+        } catch (\Throwable $e) {
+            Log::warning('Exception during image normalization.', [
+                'exception' => $e,
+            ]);
+
+            return null;
+        }
+    }
+
+    /**
+     * Salva il contenuto dell'immagine in storage pubblico.
+     */
+    private function saveImageToStorage(string $imageContent, string $barcode): ?string
+    {
+        try {
+            // Determinare l'estensione basata su tipo MIME
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            if ($finfo === false) {
+                return null;
+            }
+
+            $mimeType = finfo_buffer($finfo, $imageContent);
+            finfo_close($finfo);
+
+            $extension = match ($mimeType) {
+                'image/jpeg' => 'jpg',
+                'image/png' => 'png',
+                'image/webp' => 'webp',
+                default => 'jpg',
+            };
+
+            // Costruire il percorso di storage usando lo stesso pattern di ProductImageCacheService
+            $treeHash = sha1($barcode);
+            $levelOne = substr($treeHash, 0, 2);
+            $levelTwo = substr($treeHash, 2, 2);
+            // Usare timestamp per differenziare i caricamenti
+            $fileHash = substr(sha1(time().$barcode.random_int(0, PHP_INT_MAX)), 0, 16);
+
+            $path = "products/{$levelOne}/{$levelTwo}/{$barcode}-{$fileHash}.{$extension}";
+
+            // Salvare il file in storage pubblico
+            Storage::disk('public')->put($path, $imageContent);
+
+            // Restituire l'URL pubblico
+            return Storage::disk('public')->url($path);
+        } catch (\Throwable $e) {
+            Log::error('Exception while saving image to storage.', [
+                'barcode' => $barcode,
+                'exception' => $e,
+            ]);
+
+            return null;
+        }
     }
 }
