@@ -13,8 +13,10 @@ Gnuff è un'applicazione Laravel 13 che permette di mantenere un database di pro
   - Visualizzazione, creazione, aggiornamento e cancellazione di prodotti.
   - Valutazione dei prodotti con rating (`gnuf`, `ok`, `meh`, `bleah`).
   - Integrazione con l'API di **OpenFoodFacts** per recuperare informazioni sui prodotti tramite barcode.
+  - Upload e crop immagini prodotto (JPEG/PNG/WebP, max 5MB).
   - API RESTful protette da Sanctum per operazioni su prodotti, liste e rating.
   - Interfaccia web SPA con Inertia.js per una UX fluida.
+  - Mobile-first responsive design con supporto touch gestures.
 
 ## Tecnologie Utilizzate
 - **Backend**: Laravel 13 (PHP 8.3+), Laravel Sanctum, Inertia.js
@@ -87,6 +89,7 @@ chown -R www-data:www-data storage bootstrap/cache public/storage
 |--------|-----|------------|-------------|
 | `GET` | `/api/products` | `ProductController@apiIndex` | Lista paginata di tutti i prodotti (opzionale filtro per `list_id`). |
 | `GET` | `/api/product/{barcode}` | `ProductController@show` | Dettagli di un prodotto, con integrazione OpenFoodFacts. |
+| `POST` | `/api/product/{barcode}/image` | `ProductController@updateImage` | Upload immagine prodotto (Base64 JPEG/PNG/WebP, max 5MB). |
 | `PUT` | `/api/product/{barcode}` | `ProductController@update` | Aggiorna nome e immagine di un prodotto. |
 | `DELETE` | `/api/product/{product}` | `ProductController@destroy` | Rimuove un prodotto. |
 | `POST` | `/api/product` | `ProductController@store` | Crea o aggiorna un prodotto. |
@@ -113,6 +116,10 @@ chown -R www-data:www-data storage bootstrap/cache public/storage
 
 ## Test
 - Esegui `./vendor/bin/sail artisan test` per lanciare i test unitari e di integrazione.
+- Esegui `./vendor/bin/sail npm run test` per i test frontend Vue.
+
+## Documentazione API
+Per la documentazione completa delle API RESTful, vedi [docs/api.md](docs/api.md).
 
 --- 
 
