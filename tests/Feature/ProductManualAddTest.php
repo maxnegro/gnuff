@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+use App\Models\ProductList;
 use App\Models\User;
-use App\Models\Product;
-use App\Models\Rating;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Tests\TestCase;
 
 class ProductManualAddTest extends TestCase
 {
@@ -17,7 +18,7 @@ class ProductManualAddTest extends TestCase
     public function test_add_product_and_rating_manually_with_openfoodfacts_integration()
     {
         $user = User::factory()->create();
-        $productList = \App\Models\ProductList::factory()->create(['owner_id' => $user->id]);
+        $productList = ProductList::factory()->create(['owner_id' => $user->id]);
         $barcode = '8002885005110'; // Si&No di Mais
 
         // Step 1: Richiesta GET per recuperare il prodotto (simula la ricerca EAN)
@@ -48,7 +49,7 @@ class ProductManualAddTest extends TestCase
     public function test_add_product_and_rating_manually_with_custom_name()
     {
         $user = User::factory()->create();
-        $productList = \App\Models\ProductList::factory()->create(['owner_id' => $user->id]);
+        $productList = ProductList::factory()->create(['owner_id' => $user->id]);
         $barcode = '9999999999999'; // barcode fittizio
         $customName = 'Test Prodotto Manuale';
 
@@ -94,5 +95,105 @@ class ProductManualAddTest extends TestCase
         $this->assertArrayHasKey('name', $data);
         $this->assertArrayHasKey('image_url', $data);
         $this->assertCount(3, $data, 'Devono essere presenti solo barcode, name, image_url');
+    }
+
+    public function test_openfoodfacts_cache_hit_does_not_consume_upstream_budget(): void
+    {
+        Cache::flush();
+        config([
+            'openfoodfacts.product_lookup_limit_per_minute' => 1,
+            'openfoodfacts.server_id' => 'cache-hit-test',
+        ]);
+
+        Http::fake([
+            'https://world.openfoodfacts.net/api/v2/product/8002885005110*' => Http::response([
+                'status' => 1,
+                'product' => [
+                    'code' => '8002885005110',
+                    'product_name' => 'Prodotto OFF cache',
+                    'image_url' => null,
+                ],
+            ], 200),
+        ]);
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->getJson('/product/8002885005110')->assertStatus(200);
+        $this->actingAs($user)->getJson('/product/8002885005110')->assertStatus(200);
+
+        Http::assertSentCount(1);
+    }
+
+    public function test_openfoodfacts_server_wide_budget_blocks_extra_real_lookups(): void
+    {
+        Cache::flush();
+        config([
+            'openfoodfacts.product_lookup_limit_per_minute' => 1,
+            'openfoodfacts.server_id' => 'budget-test',
+        ]);
+
+        Http::fake([
+            'https://world.openfoodfacts.net/api/v2/product/8002885005110*' => Http::response([
+                'status' => 1,
+                'product' => [
+                    'code' => '8002885005110',
+                    'product_name' => 'Prodotto OFF budget',
+                    'image_url' => null,
+                ],
+            ], 200),
+            'https://world.openfoodfacts.net/api/v2/product/8002885005111*' => Http::response([
+                'status' => 1,
+                'product' => [
+                    'code' => '8002885005111',
+                    'product_name' => 'Prodotto OFF budget 2',
+                    'image_url' => null,
+                ],
+            ], 200),
+        ]);
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->getJson('/product/8002885005110')->assertStatus(200);
+        $response = $this->actingAs($user)->getJson('/product/8002885005111');
+
+        $response
+            ->assertStatus(502)
+            ->assertJsonPath('details.error_code', 'OFF_RATE_LIMITED');
+        $this->assertGreaterThanOrEqual(1, $response->json('details.retry_after'));
+
+        Http::assertSentCount(1);
+    }
+
+    public function test_openfoodfacts_429_opens_short_circuit_and_is_cached(): void
+    {
+        Cache::flush();
+        config([
+            'openfoodfacts.product_lookup_limit_per_minute' => 10,
+            'openfoodfacts.server_id' => 'rate-limit-test',
+        ]);
+
+        Http::fake([
+            'https://world.openfoodfacts.net/api/v2/product/8002885005112*' => Http::response([
+                'status' => 0,
+                'product' => null,
+            ], 429, ['Retry-After' => '123']),
+        ]);
+
+        $user = User::factory()->create();
+
+        $first = $this->actingAs($user)->getJson('/product/8002885005112');
+        $second = $this->actingAs($user)->getJson('/product/8002885005112');
+
+        $first
+            ->assertStatus(502)
+            ->assertJsonPath('details.error_code', 'OFF_RATE_LIMITED')
+            ->assertJsonPath('details.retry_after', 123);
+
+        $second
+            ->assertStatus(502)
+            ->assertJsonPath('details.error_code', 'OFF_RATE_LIMITED')
+            ->assertJsonPath('details.retry_after', 123);
+
+        Http::assertSentCount(1);
     }
 }

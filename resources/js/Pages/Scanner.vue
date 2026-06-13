@@ -55,6 +55,8 @@ const showProductModal = ref(false);
 const modalStep = ref('ean');
 const modalForm = ref({ barcode: '', name: '', image_url: '', rating: '' });
 const modalRatingId = ref(null);
+let lastScannedBarcode = '';
+let barcodeLookupInFlight = false;
 
 
 function toggleTorch() {
@@ -67,12 +69,19 @@ function togglePause() {
 
 async function onResult(result) {
   if ((result.format == 7) || (result.format == 14)) {
+    const barcode = result.text;
+    if (barcode === lastScannedBarcode || barcodeLookupInFlight) {
+      return;
+    }
+
+    lastScannedBarcode = barcode;
+    barcodeLookupInFlight = true;
     scannerPaused.value = true;
     try {
-      const response = await axios.get(`/product/${result.text}`);
+      const response = await axios.get(`/product/${encodeURIComponent(barcode)}`);
       // Prepara dati per la modale
       modalForm.value = {
-        barcode: result.text,
+        barcode,
         name: response.data.product?.name || '',
         image_url: response.data.product?.image_url || '',
         rating: response.data.rating || '',
@@ -81,11 +90,13 @@ async function onResult(result) {
       modalStep.value = 'dati';
       showProductModal.value = true;
     } catch (error) {
-      // Prodotto non trovato
-      modalForm.value = { barcode: result.text, name: '', image_url: '', rating: '' };
+      // Prodotto non trovato o lookup temporaneamente non disponibile
+      modalForm.value = { barcode, name: '', image_url: '', rating: '' };
       modalRatingId.value = null;
       modalStep.value = 'errore';
       showProductModal.value = true;
+    } finally {
+      barcodeLookupInFlight = false;
     }
   }
 }
@@ -97,6 +108,7 @@ function onError(err) {
 function onModalSaved() {
   showProductModal.value = false;
   scannerPaused.value = false;
+  lastScannedBarcode = '';
 }
 
 </script>

@@ -46,6 +46,21 @@ class ProductController extends Controller
         ], $status);
     }
 
+    private function productLookupErrorDetails(string $barcode, ?string $errorCode, ?int $retryAfter): array
+    {
+        $details = ['barcode' => $barcode];
+
+        if ($errorCode !== null) {
+            $details['error_code'] = $errorCode;
+        }
+
+        if ($retryAfter !== null && $retryAfter > 0) {
+            $details['retry_after'] = $retryAfter;
+        }
+
+        return $details;
+    }
+
     private function imageUrlRules(): array
     {
         return [
@@ -147,16 +162,22 @@ class ProductController extends Controller
             $apiStatus = $apiResult['status'];
             $apiProduct = $apiResult['product'];
             $apiError = $apiResult['error'];
+            $apiErrorCode = $apiResult['error_code'] ?? null;
+            $apiRetryAfter = $apiResult['retry_after'] ?? null;
 
             if ($apiError && ! $product) {
                 Log::warning('Product lookup failed on external source and no local fallback.', [
                     'barcode' => $barcode,
                     'request_id' => $this->getRequestId(),
                     'error' => $apiError,
+                    'error_code' => $apiErrorCode,
+                    'retry_after' => $apiRetryAfter,
                 ]);
 
                 return $this->errorResponse('OFF_LOOKUP_FAILED', $apiError, 502, [
                     'barcode' => $barcode,
+                    'error_code' => $apiErrorCode,
+                    'retry_after' => $apiRetryAfter,
                 ]);
             }
 
@@ -212,7 +233,7 @@ class ProductController extends Controller
                     'OFF_INVALID_RESPONSE',
                     $apiError ?? 'Errore nella risposta da OpenFoodFacts',
                     502,
-                    ['barcode' => $barcode]
+                    $this->productLookupErrorDetails($barcode, $apiErrorCode, $apiRetryAfter)
                 );
             } else {
                 // Prodotto già in DB

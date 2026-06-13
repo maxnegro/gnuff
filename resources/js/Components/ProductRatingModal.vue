@@ -45,6 +45,28 @@ const ratingOptions = [
 
 const placeholder = '/img/gnuff-placeholder-192.png';
 
+let barcodeLookupTimer = null
+let activeBarcodeLookup = null
+
+function setManualLookupError(error) {
+  const code = error?.response?.data?.details?.error_code || error?.response?.data?.code
+  const retryAfter = error?.response?.data?.details?.retry_after
+
+  if (code === 'OFF_RATE_LIMITED' || code === 'OFF_CIRCUIT_OPEN' || code === 'OFF_UNAVAILABLE') {
+    manualFormError.value = retryAfter
+      ? `OpenFoodFacts è temporaneamente sovraccarico. Riprova tra circa ${retryAfter} secondi.`
+      : 'OpenFoodFacts è temporaneamente sovraccarico. Riprova più tardi.'
+    return
+  }
+
+  if (error?.response?.status === 429) {
+    manualFormError.value = 'Troppe richieste prodotto. Riprova più tardi.'
+    return
+  }
+
+  manualFormError.value = ''
+}
+
 
 // Gestione chiusura con ESC
 function handleEscClose(e) {
@@ -69,6 +91,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleEscClose)
+  clearTimeout(barcodeLookupTimer)
 })
 
 
@@ -78,6 +101,9 @@ watch(() => props.modelValue, async (v) => {
     manualStep.value = props.initialStep
     // Usa sempre i dati dal DB come base
     manualForm.value = { ...props.initialForm }
+    clearTimeout(barcodeLookupTimer)
+    barcodeLookupTimer = null
+    activeBarcodeLookup = null
     manualFormError.value = ''
     showImageInput.value = false
     newImageUrl.value = ''
@@ -109,12 +135,46 @@ watch(() => props.modelValue, async (v) => {
   }
 })
 
+function scheduleBarcodeLookup() {
+  if (!manualForm.value.barcode) {
+    manualFormLoading.value = false
+    return
+  }
+
+  if (activeBarcodeLookup) {
+    return
+  }
+
+  manualFormError.value = ''
+  manualFormLoading.value = true
+  clearTimeout(barcodeLookupTimer)
+  barcodeLookupTimer = setTimeout(() => cercaEAN(), 350)
+}
+
 async function cercaEAN() {
+  if (barcodeLookupTimer) {
+    clearTimeout(barcodeLookupTimer)
+    barcodeLookupTimer = null
+  }
+
+  const barcode = manualForm.value.barcode.trim()
+  if (!barcode) {
+    manualFormError.value = 'Inserisci un codice a barre.'
+    manualFormLoading.value = false
+    return
+  }
+
+  if (activeBarcodeLookup === barcode && manualFormLoading.value) {
+    return
+  }
+
   manualFormError.value = ''
   manualFormLoading.value = true
   manualProductFound.value = false
+  activeBarcodeLookup = barcode
+
   try {
-    const res = await axios.get(`/product/${manualForm.value.barcode}`)
+    const res = await axios.get(`/product/${encodeURIComponent(barcode)}`)
     if (res.data && res.data.product) {
       manualForm.value.name = res.data.product.name || ''
       manualForm.value.image_url = res.data.product.image_url || ''
@@ -125,8 +185,12 @@ async function cercaEAN() {
       manualStep.value = 'errore'
     }
   } catch (e) {
+    setManualLookupError(e)
     manualStep.value = 'errore'
   } finally {
+    if (activeBarcodeLookup === barcode) {
+      activeBarcodeLookup = null
+    }
     manualFormLoading.value = false
   }
 }
@@ -319,6 +383,7 @@ async function submitManualForm() {
           required
           autofocus
           ref="eanInputRef"
+          @input="scheduleBarcodeLookup"
         />
 <button type="submit" :disabled="manualFormLoading || !manualForm.barcode" class="app-button-primary mt-2 w-full disabled:cursor-not-allowed disabled:opacity-60">
   Cerca prodotto

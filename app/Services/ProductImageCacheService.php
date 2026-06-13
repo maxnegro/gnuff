@@ -10,7 +10,7 @@ class ProductImageCacheService
 {
     public function isLocalStorageUrl(?string $url): bool
     {
-        if (!$url) {
+        if (! $url) {
             return false;
         }
 
@@ -18,7 +18,7 @@ class ProductImageCacheService
             return true;
         }
 
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        if (! filter_var($url, FILTER_VALIDATE_URL)) {
             return false;
         }
 
@@ -29,7 +29,7 @@ class ProductImageCacheService
 
     public function toStoragePath(?string $url): ?string
     {
-        if (!$this->isLocalStorageUrl($url)) {
+        if (! $this->isLocalStorageUrl($url)) {
             return null;
         }
 
@@ -44,7 +44,7 @@ class ProductImageCacheService
 
     public function cacheRemoteImage(?string $remoteUrl, string $barcode): ?string
     {
-        if (!$remoteUrl) {
+        if (! $remoteUrl) {
             return null;
         }
 
@@ -54,12 +54,20 @@ class ProductImageCacheService
         }
 
         $scheme = parse_url($remoteUrl, PHP_URL_SCHEME);
-        if (!in_array($scheme, ['http', 'https'], true)) {
+        if (! in_array($scheme, ['http', 'https'], true)) {
             return null;
         }
 
+        foreach ($this->possibleExtensions($remoteUrl) as $extension) {
+            $path = $this->buildStoragePath($barcode, $remoteUrl, $extension);
+
+            if (Storage::disk('public')->exists($path)) {
+                return Storage::disk('public')->url($path);
+            }
+        }
+
         try {
-            $response = Http::timeout(10)
+            $response = Http::timeout((int) config('openfoodfacts.image_timeout_seconds', 10))
                 ->withHeaders([
                     'Accept' => 'image/*,*/*;q=0.8',
                     'User-Agent' => 'GnuffApp Image Cache/1.0',
@@ -75,7 +83,7 @@ class ProductImageCacheService
             return null;
         }
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             Log::warning('Remote image cache request returned non-success status.', [
                 'barcode' => $barcode,
                 'url' => $remoteUrl,
@@ -150,6 +158,24 @@ class ProductImageCacheService
             || str_contains($contentType, 'text/html');
     }
 
+    private function extensionFromUrl(string $url): string
+    {
+        $path = parse_url($url, PHP_URL_PATH) ?: '';
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        return in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)
+            ? ($extension === 'jpeg' ? 'jpg' : $extension)
+            : 'jpg';
+    }
+
+    private function possibleExtensions(string $url): array
+    {
+        return array_values(array_unique(array_merge(
+            [$this->extensionFromUrl($url)],
+            ['jpg', 'png', 'webp', 'gif']
+        )));
+    }
+
     private function guessExtension(string $url, string $contentType): string
     {
         if (str_contains($contentType, 'image/jpeg')) {
@@ -168,11 +194,6 @@ class ProductImageCacheService
             return 'gif';
         }
 
-        $path = parse_url($url, PHP_URL_PATH) ?: '';
-        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-
-        return in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)
-            ? ($extension === 'jpeg' ? 'jpg' : $extension)
-            : 'jpg';
+        return $this->extensionFromUrl($url);
     }
 }

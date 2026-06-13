@@ -438,7 +438,16 @@ Le API sono protette da rate limiting:
 | Middleware | Limite | Scopo |
 |------------|--------|-------|
 | `throttle:api` | 60 richieste/minuto per utente | Generale |
-| `throttle:product_lookup` | 30 richieste/minuto per utente | Ricerca prodotto (OpenFoodFacts) |
+| `throttle:product_lookup` | 30 richieste/minuto per utente | Lookup prodotto lato Gnuff |
+
+Il lookup prodotto può chiamare OpenFoodFacts. Per rispettare i limiti upstream di OpenFoodFacts, Gnuff applica anche una quota server-wide prima di effettuare chiamate reali all'API esterna. Questa quota è conteggiata solo sui cache miss e usa l'identità del server Gnuff, non l'IP del client.
+
+| Origine | Limite | Chiave |
+|---------|--------|--------|
+| Gnuff API generale | 60 richieste/minuto | utente o IP client |
+| Gnuff product lookup | 30 richieste/minuto | utente o IP client |
+| OpenFoodFacts product read | 15 richieste/minuto | server Gnuff |
+| OpenFoodFacts search | 10 richieste/minuto | server Gnuff |
 
 Le intestazioni di risposta includono i limiti correnti:
 
@@ -446,6 +455,8 @@ Le intestazioni di risposta includono i limiti correnti:
 X-RateLimit-Limit: 60
 X-RateLimit-Remaining: 58
 ```
+
+Quando OpenFoodFacts restituisce `429`, `503` o un timeout, Gnuff evita nuove chiamate reali per un breve intervallo, usa la cache locale quando disponibile e restituisce un errore controllato con `error_code` nei `details`, ad esempio `OFF_RATE_LIMITED` o `OFF_UNAVAILABLE`.
 
 ---
 
