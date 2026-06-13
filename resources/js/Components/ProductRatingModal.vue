@@ -2,6 +2,8 @@
 import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import axios from 'axios'
 import ImageCropModal from './ImageCropModal.vue'
+import ProductPreviewCard from './ProductPreviewCard.vue'
+import RatingSelectForm from './RatingSelectForm.vue'
 import { validateImageFile } from '@/utils/imageFileValidation'
 
 const props = defineProps({
@@ -324,16 +326,13 @@ async function submitManualForm() {
         <p v-if="manualFormError" class="text-red-500 dark:text-red-400">{{ manualFormError }}</p>
       </form>
       <div v-else-if="manualStep === 'dati'" class="flex flex-col gap-4">
-        <div class="flex items-start gap-4 rounded-3xl p-4" :style="{ background: 'color-mix(in srgb, var(--app-bg-muted) 100%, transparent)' }">
-          <div class="flex flex-shrink-0 flex-col items-center">
-            <img :src="manualForm.image_url || placeholder" alt="Immagine prodotto" class="h-20 w-20 cursor-pointer rounded-2xl object-cover border-2 border-transparent hover:border-indigo-400" @click="showImageInput = true; newImageUrl = manualForm.image_url || ''" />
-            <button type="button" @click="showImageInput = true; newImageUrl = manualForm.image_url || ''" class="app-button-secondary mt-2 px-3 py-1.5 text-xs">Cambia</button>
-          </div>
-          <div class="flex flex-col gap-1 overflow-hidden">
-            <div class="text-base font-bold leading-snug">{{ manualForm.name || 'Nome non disponibile' }}</div>
-            <div class="text-xs font-medium" :style="{ color: 'var(--app-text-soft)' }">EAN: {{ manualForm.barcode }}</div>
-          </div>
-        </div>
+        <ProductPreviewCard
+          :name="manualForm.name"
+          :barcode="manualForm.barcode"
+          :image-url="manualForm.image_url"
+          :placeholder="placeholder"
+          @change-image="showImageInput = true; newImageUrl = manualForm.image_url || ''"
+        />
         <div v-if="showImageInput" class="flex flex-col gap-2 mb-2">
           <input v-model="newImageUrl" type="url" placeholder="Nuovo URL immagine" class="app-input" />
           <div class="flex gap-2 flex-wrap">
@@ -382,38 +381,31 @@ async function submitManualForm() {
             @change="handleCameraCapture"
           />
         </div>
-        <form @submit.prevent="submitManualForm" class="flex flex-col gap-3">
-          <input v-model="manualForm.name" type="text" placeholder="Nome prodotto" class="app-input" required />
-          <select v-model="manualForm.rating" class="app-select" required>
-            <option value="" disabled>Valutazione</option>
-            <option v-for="opt in ratingOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-          </select>
-          <button type="submit" :disabled="manualFormLoading" class="app-button-primary mt-2 w-full disabled:cursor-not-allowed disabled:opacity-60">
-            Salva valutazione
-          </button>
-          <button v-if="ratingId" type="button" @click="removeRating" :disabled="manualFormLoading" data-test="remove-rating" class="app-button-secondary w-full disabled:cursor-not-allowed disabled:opacity-60">
-            Rimuovi valutazione
-          </button>
-          <p v-if="manualFormError" class="text-red-500 dark:text-red-400">{{ manualFormError }}</p>
-        </form>
+        <RatingSelectForm
+          v-model:name="manualForm.name"
+          v-model:rating="manualForm.rating"
+          :rating-id="ratingId"
+          :loading="manualFormLoading"
+          :error="manualFormError"
+          :rating-options="ratingOptions"
+          @submit="submitManualForm"
+          @delete="removeRating"
+        />
       </div>
       <div v-else-if="manualStep === 'errore'" class="flex flex-col gap-3">
         <p class="text-red-500 dark:text-red-400">Prodotto non trovato su OpenFoodFacts. Inserisci i dati manualmente.</p>
-        <form @submit.prevent="submitManualForm" class="flex flex-col gap-3">
-          <input v-model="manualForm.name" type="text" placeholder="Nome prodotto" class="app-input" required />
-          <select v-model="manualForm.rating" class="app-select" required>
-            <option value="" disabled>Valutazione</option>
-            <option v-for="opt in ratingOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-          </select>
-          <button type="submit" :disabled="manualFormLoading" class="app-button-primary mt-2 w-full disabled:cursor-not-allowed disabled:opacity-60">
-            Salva valutazione
-          </button>
-          <button v-if="ratingId" type="button" @click="removeRating" :disabled="manualFormLoading" data-test="remove-rating" class="app-button-secondary w-full disabled:cursor-not-allowed disabled:opacity-60">
-            Rimuovi valutazione
-          </button>
-          <p v-if="manualFormError" class="text-red-500 dark:text-red-400">{{ manualFormError }}</p>
-        </form>
+        <RatingSelectForm
+          v-model:name="manualForm.name"
+          v-model:rating="manualForm.rating"
+          :rating-id="ratingId"
+          :loading="manualFormLoading"
+          :error="manualFormError"
+          :rating-options="ratingOptions"
+          @submit="submitManualForm"
+          @delete="removeRating"
+        />
       </div>
+
     </div>
   </div>
   <!-- Image Crop Modal -->

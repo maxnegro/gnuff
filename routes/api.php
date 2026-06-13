@@ -7,6 +7,7 @@ use App\Http\Controllers\RatingController;
 Route::middleware([
     'auth:sanctum',
     \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+    'throttle:api',
 ])->group(function () {
     Route::post('/rate', [RatingController::class, 'store']);
     Route::put('/rate/{rating}', [RatingController::class, 'update']);
@@ -15,3 +16,4 @@ Route::middleware([
     Route::get('/ratings', [RatingController::class, 'index']); // paginazione/listing
     Route::get('/products', [\App\Http\Controllers\ProductController::class, 'apiIndex']); // lista prodotti
 });
+

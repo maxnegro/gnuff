@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class OpenFoodFactsService
 {
@@ -26,6 +27,16 @@ class OpenFoodFactsService
      */
     public function getProductByBarcode(string $barcode): array
     {
+        $store = app()->environment('testing') ? 'array' : 'redis';
+        $cacheKey = "off_product_{$barcode}";
+
+        if (Cache::store($store)->has($cacheKey)) {
+            $cached = Cache::store($store)->get($cacheKey);
+            if (is_array($cached)) {
+                return $cached;
+            }
+        }
+
         $params = [
             'lc' => 'it',
             'cc' => 'it',
@@ -52,11 +63,18 @@ class OpenFoodFactsService
 
         if ($response->successful()) {
             $json = $response->json();
-            return [
+            $result = [
                 'status' => $json['status'] ?? null,
                 'product' => $json['product'] ?? null,
                 'error' => null,
             ];
+
+            // Cache per 1 giorno se il prodotto è stato cercato con successo (trovato o non trovato)
+            if (isset($json['status'])) {
+                Cache::store($store)->put($cacheKey, $result, now()->addDay());
+            }
+
+            return $result;
         }
 
         Log::warning('OpenFoodFacts product lookup returned non-success status.', [
