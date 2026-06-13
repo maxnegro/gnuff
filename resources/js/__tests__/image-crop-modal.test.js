@@ -260,4 +260,55 @@ describe('ImageCropModal', () => {
 
         expect(cropperState.setPan).toHaveBeenCalled();
     });
+
+    it('gestisce lo zoom tramite rotella del mouse', async () => {
+        const wrapper = mount(ImageCropModal, {
+            props: {
+                isOpen: true,
+            },
+        });
+
+        const canvas = wrapper.find('canvas');
+
+        // Simulate wheel event - scroll up (zoom in)
+        await canvas.trigger('wheel', { deltaY: -100 });
+        expect(cropperState.setZoom).toHaveBeenCalled();
+    });
+
+    it('gestisce i tasti freccia per il pan', async () => {
+        const wrapper = mount(ImageCropModal, {
+            props: {
+                isOpen: true,
+            },
+        });
+
+        // Test individual arrow key handlers
+        wrapper.vm.handleArrowUp();
+        expect(cropperState.setPan).toHaveBeenCalled();
+
+        wrapper.vm.handleArrowDown();
+        expect(cropperState.setPan).toHaveBeenCalled();
+
+        wrapper.vm.handleArrowLeft();
+        expect(cropperState.setPan).toHaveBeenCalled();
+
+        wrapper.vm.handleArrowRight();
+        expect(cropperState.setPan).toHaveBeenCalled();
+    });
+
+    it('ha attributi ARIA per accessibilità', async () => {
+        const wrapper = mount(ImageCropModal, {
+            props: {
+                isOpen: true,
+            },
+        });
+
+        const canvas = wrapper.find('canvas');
+        expect(canvas.attributes('role')).toBe('slider');
+        expect(canvas.attributes('aria-label')).toContain('Canvas per ritaglio immagine');
+
+        const slider = wrapper.find('input[type="range"]');
+        expect(slider.attributes('role')).toBe('slider');
+        expect(slider.attributes('aria-label')).toContain('zoom');
+    });
 });

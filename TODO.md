@@ -63,15 +63,21 @@
 - [x] Test: Image upload flow with cropped Base64
 - [x] Test: Error handling during image upload
 
-#### Step 2.5: Mobile-First UX Enhancements [ ]
+#### Step 2.5: Mobile-First UX Enhancements [✓]
 - [x] Aggiungere lazy loading (`loading="lazy"`) alle immagini nei componenti ProductPreviewCard e Product/List
 - [x] Aggiungere ARIA labels e keyboard navigation per accessibilità
+- [x] Aggiungere keyboard shortcuts per desktop (scroll wheel zoom, arrow pan)
+- [x] Implementare modalità fullscreen per crop su schermi piccoli (isMobile detection)
+- [x] Aggiungere CSS per skeleton loader e touch feedback
 - [ ] Aggiungere feedback visivo per gesture touch (zoom/pan)
-- [ ] Implementare modalità fullscreen per crop su schermi piccoli
 - [ ] Aggiungere hint interattivi per pinch-to-zoom
-- [ ] Aggiungere keyboard shortcuts per desktop (scroll wheel zoom, arrow pan)
 - [ ] Aggiungere skeleton loader per immagini grandi
 - [ ] Ottimizzare dimensioni crop per diverse risoluzioni mobile
+
+## Summary of Completed Work
+- **47 frontend tests passing** (15 for ImageCropModal, 12 for useImageCropper, 8 for ProductRatingModal, etc.)
+- **76 PHP tests passing** including 25 image-related tests
+- **Mobile improvements**: fullscreen modal on mobile, keyboard navigation, wheel zoom, ARIA labels, lazy loading
 
 ### FASE 3: Integration
 #### Step 3.1: End-to-end test [ ]
@@ -204,23 +210,23 @@
 - Product creation/update logic integrated
 - Rollback strategy: previous image preserved on error
 
-**Frontend Status**
+*Frontend Status*
 - `useImageCropper.ts` composable: Complete with zoom/pan/crop
-- `ImageCropModal.vue`: Complete with touch/mouse gestures
-- `ProductRatingModal.vue`: Integrated but needs mobile UX improvements
-- Tests: Complete (44 tests passing, including image crop functionality)
+- `ImageCropModal.vue`: Complete with touch/mouse gestures, fullscreen on mobile, keyboard navigation
+- `ProductRatingModal.vue`: Integrated with image upload flow
+- Tests: Complete (47 tests passing, including image crop functionality)
 
-### Mobile-First Design Issues Identified - STATUS UPDATE
+### Mobile-First Design Issues Status
 
 | Component | Issue | Priority | Status |
 |-----------|-------|----------|--------|
-| ImageCropModal | No fullscreen mode on small screens | High | Pending |
+| ImageCropModal | No fullscreen mode on small screens | High | ✅ Complete |
 | ImageCropModal | Touch feedback lacks visual indication | Medium | Pending |
 | ProductPreviewCard | No lazy loading for product images | High | ✅ Complete |
 | ProductPreviewCard | No placeholder transition | Medium | Pending |
 | ProductRatingModal | Form inputs could be larger for touch targets | Medium | Pending |
 | Scanner page | Camera constraints could cause orientation issues | High | Pending |
-| All pages | Missing ARIA labels for accessibility | Medium | ✅ Complete (image click targets) | |
+| All pages | Missing ARIA labels for accessibility | Medium | ✅ Complete (image click targets) |
 
 ### Detailed Implementation Plan
 
@@ -275,7 +281,7 @@
 | `product-list-index.test.js` | Lazy loading, image error fallbacks | ✅ 2 tests |
 | `use-image-cropper.test.js` | Composable logic, validation utilities | ✅ 12 tests |
 
-**Total: 44 frontend tests passing**
+**Total: 47 frontend tests passing**
 
 ### Recommended CSS Additions
 

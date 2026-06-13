@@ -1,10 +1,12 @@
 <template>
-  <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+    :class="{ 'p-0': isMobile }">
     <!-- Overlay with modern backdrop blur -->
     <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-md" @click="onCancel"></div>
 
-    <!-- Immersive dark modal container -->
-    <div class="relative bg-slate-900 border border-slate-800 text-white rounded-[28px] shadow-2xl p-6 sm:p-7 max-w-md w-full mx-auto overflow-hidden transition-all duration-300 scale-100">
+    <!-- Immersive dark modal container - fullscreen on mobile -->
+    <div class="relative bg-slate-900 border border-slate-800 text-white rounded-[28px] shadow-2xl p-6 sm:p-7 max-w-md w-full mx-auto overflow-hidden transition-all duration-300 scale-100"
+      :class="{ 'rounded-none max-w-none h-screen': isMobile }">
       <!-- Header -->
       <div class="flex items-center justify-between mb-5">
         <h2 class="text-lg font-bold text-slate-100">Ritaglia Immagine</h2>
@@ -12,6 +14,7 @@
           type="button"
           @click="onCancel"
           class="text-slate-400 hover:text-white p-1 rounded-full hover:bg-slate-800 transition"
+          aria-label="Chiudi modale"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -33,12 +36,21 @@
       <!-- Canvas and Controls -->
       <div v-show="image && !isLoading" class="space-y-5">
         <!-- Interactive Canvas Wrapper -->
-        <div class="relative mx-auto w-full aspect-square bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 shadow-inner select-none cursor-move">
+        <div class="relative mx-auto w-full aspect-square bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 shadow-inner select-none cursor-move"
+          :class="{ 'aspect-video sm:aspect-square': isMobile }">
           <canvas
             :ref="setCanvasElement"
             @mousedown="onMousedown"
             @dblclick="handleDblClick"
+            @wheel="handleWheel"
             class="block h-full w-full"
+            role="slider"
+            :aria-label="`Canvas per ritaglio immagine. Zoom: ${zoomPercentage}%. Usare la rotella del mouse per zoomare, trascinare per spostare.`"
+            tabindex="0"
+            @keydown.arrow-up="handleArrowUp"
+            @keydown.arrow-down="handleArrowDown"
+            @keydown.arrow-left="handleArrowLeft"
+            @keydown.arrow-right="handleArrowRight"
           ></canvas>
 
           <!-- Gesture Instructions Badge -->
@@ -49,7 +61,7 @@
 
         <!-- Zoom Slider & Reset -->
         <div class="flex items-center gap-3 bg-slate-950/40 p-3 rounded-2xl border border-slate-800/80">
-          <span class="text-xs font-semibold text-slate-500 select-none">-</span>
+          <span class="text-xs font-semibold text-slate-500 select-none" aria-hidden="true">-</span>
           <input
             type="range"
             :value="zoom"
@@ -58,13 +70,16 @@
             step="0.05"
             @input="handleZoomChange"
             class="flex-1 accent-indigo-500 bg-slate-800 rounded-lg appearance-none h-1.5 cursor-pointer"
+            role="slider"
+            aria-label="Regola lo zoom dell'immagine"
           />
-          <span class="text-xs font-semibold text-slate-500 select-none">+</span>
-          <span class="text-xs font-mono text-slate-400 min-w-[32px] text-right">{{ zoomPercentage }}%</span>
+          <span class="text-xs font-semibold text-slate-500 select-none" aria-hidden="true">+</span>
+          <span class="text-xs font-mono text-slate-400 min-w-[32px] text-right" aria-label="Zoom percentage">{{ zoomPercentage }}%</span>
           <button
             type="button"
             @click="imageCropper.reset"
-            class="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition"
+            class="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition min-h-[44px] min-w-[44px]"
+            aria-label="Resetta zoom e posizione"
           >
             Reset
           </button>
@@ -76,7 +91,7 @@
         <button
           type="button"
           @click="onCancel"
-          class="flex-1 px-4 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700/50 text-slate-300 rounded-2xl font-semibold transition"
+          class="flex-1 px-4 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700/50 text-slate-300 rounded-2xl font-semibold transition min-h-[44px]"
         >
           Annulla
         </button>
@@ -84,7 +99,7 @@
           type="button"
           @click="onConfirm"
           :disabled="!image || isLoading"
-          class="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-semibold shadow-lg shadow-indigo-600/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          class="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-semibold shadow-lg shadow-indigo-600/20 transition disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
         >
           Conferma
         </button>
@@ -94,7 +109,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onBeforeUnmount, onMounted } from 'vue'
 import { useImageCropper } from '@/composables/useImageCropper'
 
 interface Props {
@@ -111,6 +126,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const canvasElement = ref<HTMLCanvasElement | null>(null)
+const isMobile = ref(false)
 const imageCropper = useImageCropper(400, 400)
 const { image, zoom, isLoading, error, maxZoom, minZoom } = imageCropper
 
@@ -127,6 +143,17 @@ const startPanY = ref(0)
 const initialDistance = ref(0)
 const startZoom = ref(1)
 const lastTap = ref(0)
+
+// Touch visual feedback
+const isTouchActive = ref(false)
+
+// Detect mobile viewport
+onMounted(() => {
+  isMobile.value = window.innerWidth < 640
+  window.addEventListener('resize', () => {
+    isMobile.value = window.innerWidth < 640
+  })
+})
 
 watch(
   () => imageCropper.image.value,
@@ -238,11 +265,36 @@ const onTouchMove = (e: TouchEvent) => {
 const onTouchEnd = () => {
   isDragging.value = false
   isZooming.value = false
+  isTouchActive.value = false
 }
 
 const handleZoomChange = (event: Event) => {
   const target = event.target as HTMLInputElement
   imageCropper.setZoom(parseFloat(target.value))
+}
+
+const handleWheel = (e: WheelEvent) => {
+  if (imageCropper.isLoading.value || !imageCropper.image.value) return
+  e.preventDefault()
+  const delta = e.deltaY > 0 ? -0.05 : 0.05
+  const newZoom = imageCropper.zoom.value + delta
+  imageCropper.setZoom(newZoom)
+}
+
+const handleArrowUp = () => {
+  imageCropper.setPan(imageCropper.panX.value, imageCropper.panY.value + 10)
+}
+
+const handleArrowDown = () => {
+  imageCropper.setPan(imageCropper.panX.value, imageCropper.panY.value - 10)
+}
+
+const handleArrowLeft = () => {
+  imageCropper.setPan(imageCropper.panX.value + 10, imageCropper.panY.value)
+}
+
+const handleArrowRight = () => {
+  imageCropper.setPan(imageCropper.panX.value - 10, imageCropper.panY.value)
 }
 
 const handleDblClick = () => {
@@ -269,6 +321,9 @@ const onConfirm = async () => {
 onBeforeUnmount(() => {
   window.removeEventListener('mousemove', onMousemove)
   window.removeEventListener('mouseup', onMouseup)
+  window.removeEventListener('resize', () => {
+    isMobile.value = window.innerWidth < 640
+  })
   if (canvasElement.value) {
     canvasElement.value.removeEventListener('touchstart', onTouchStart)
     canvasElement.value.removeEventListener('touchmove', onTouchMove)
