@@ -1,4 +1,5 @@
 import { ref, computed, watch } from 'vue'
+import { fileToDataUri } from '@/utils/imageConverter'
 
 export interface ImageCropperState {
   canvas: HTMLCanvasElement | null
@@ -84,23 +85,15 @@ export function useImageCropper(canvasWidth = 400, canvasHeight = 400) {
    * Load image from File object
    */
   const loadImageFromFile = (file: File): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-
-      reader.onload = (e) => {
-        const base64 = e.target?.result as string
-        loadImageFromBase64(base64)
-          .then(resolve)
-          .catch(reject)
-      }
-
-      reader.onerror = () => {
-        error.value = 'Failed to read file'
-        reject(new Error('Failed to read file'))
-      }
-
-      reader.readAsDataURL(file)
-    })
+    isLoading.value = true
+    error.value = null
+    return fileToDataUri(file)
+      .then((base64) => loadImageFromBase64(base64))
+      .catch((err) => {
+        error.value = err instanceof Error ? err.message : 'Failed to read file'
+        isLoading.value = false
+        throw err
+      })
   }
 
   /**
@@ -164,12 +157,30 @@ export function useImageCropper(canvasWidth = 400, canvasHeight = 400) {
   }
 
   /**
-   * Update pan offset
+   * Update pan offset with dynamic limits to keep crop area filled
    */
   const setPan = (x: number, y: number) => {
-    const maxPan = 100 * zoom.value
-    panX.value = Math.max(-maxPan, Math.min(maxPan, x))
-    panY.value = Math.max(-maxPan, Math.min(maxPan, y))
+    if (!canvas.value || !image.value) {
+      panX.value = x
+      panY.value = y
+      draw()
+      return
+    }
+
+    const scaleX = canvas.value.width / image.value.width
+    const scaleY = canvas.value.height / image.value.height
+    const scale = Math.min(scaleX, scaleY) * zoom.value
+    const cropSize = Math.min(canvas.value.width, canvas.value.height) * 0.8
+
+    const imgWidth = image.value.width * scale
+    const imgHeight = image.value.height * scale
+
+    // Max pan limits: allow panning until the image edge reaches the opposite edge of the crop frame
+    const limitX = Math.max(0, (imgWidth - cropSize) / 2)
+    const limitY = Math.max(0, (imgHeight - cropSize) / 2)
+
+    panX.value = imgWidth >= cropSize ? Math.max(-limitX, Math.min(limitX, x)) : 0
+    panY.value = imgHeight >= cropSize ? Math.max(-limitY, Math.min(limitY, y)) : 0
     draw()
   }
 

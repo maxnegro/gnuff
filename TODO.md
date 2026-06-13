@@ -115,7 +115,7 @@
   - [x] Testare layout e componenti chiave iniziali (layout, welcome, input)  
   - [x] Testare il rendering di componenti chiave aggiuntivi (lista prodotti, form di valutazione, pagina liste)  
   - [x] Proteggere il flusso scanner (pagina scanner + emissione barcode dal componente base)  
-  - [ ] Testare il comportamento su dispositivi mobili  
+  - [x] Testare il comportamento su dispositivi mobili  
 
 - [ ] **Implementare test di prestazioni**  
   - [ ] Misurare il tempo di caricamento delle pagine  
@@ -231,69 +231,70 @@ Aggiungere all'attuale modulo di valutazione prodotto la possibilità di sostitu
 - [x] Aggiornare Product model
 - [x] Restituire URL nuova immagine
 
-**Step 1.3: Test backend** [ ]
-- [ ] Test endpoint con immagine valida
-- [ ] Test sostituzione immagine esistente
-- [ ] Test caso senza immagine precedente
-- [ ] Test validazioni (formato, dimensione, errori)
+**Step 1.3: Test backend** [✓]
+- [x] Test endpoint con immagine valida
+- [x] Test sostituzione immagine esistente
+- [x] Test caso senza immagine precedente
+- [x] Test validazioni (formato, dimensione, errori)
 
 #### FASE 2: FRONTEND - Componenti
 
-**Step 2.1: Composables e utility** [ ]
-- [ ] Creare `composable useImageCropper.ts` (canvas 2D, resize, base64)
-- [ ] Creare `utils/imageFileValidation.ts` (check tipo, dimensione)
-- [ ] Creare `utils/imageConverter.ts` (file → canvas → base64)
+**Step 2.1: Composables e utility** [✓]
+- [x] Creare `composable useImageCropper.ts` (canvas 2D, resize, base64)
+- [x] Creare `utils/imageFileValidation.ts` (check tipo, dimensione)
+- [x] Creare `utils/imageConverter.ts` (file → canvas → base64)
 
-**Step 2.2: Modale di crop** [ ]
-- [ ] Creare componente `ImageCropModal.vue`
-  - [ ] Canvas per preview
-  - [ ] Slider per zoom
-  - [ ] Pulsanti confirm/cancel
-  - [ ] Output immagine quadrata ridimensionata (es. 400x400px)
+**Step 2.2: Modale di crop** [✓]
+- [x] Creare componente `ImageCropModal.vue`
+  - [x] Canvas per preview
+  - [x] Slider per zoom
+  - [x] Pulsanti confirm/cancel
+  - [x] Output immagine quadrata ridimensionata (es. 400x400px)
 
-**Step 2.3: Integrazione in ProductRatingModal** [ ]
-- [ ] Aggiungere sezione cambio immagine (preview + button)
-- [ ] File input per desktop + fotocamera per mobile
-- [ ] Collegare a ImageCropModal
-- [ ] Loading state durante upload
-- [ ] Gestire errori e messaggi utente
-- [ ] Update preview dopo salvataggio
+**Step 2.3: Integrazione in ProductRatingModal** [✓]
+- [x] Aggiungere sezione cambio immagine (preview + button)
+- [x] File input per desktop + fotocamera per mobile
+- [x] Collegare a ImageCropModal
+- [x] Loading state durante upload
+- [x] Gestire errori e messaggi utente
+- [x] Update preview dopo salvataggio
 
-**Step 2.4: Test frontend** [ ]
-- [ ] Test apertura/chiusura ImageCropModal
-- [ ] Test upload file desktop
-- [ ] Test caricamento fotocamera (mock)
-- [ ] Test ridimensionamento immagine
-- [ ] Test invio base64 al backend
-- [ ] Test aggiornamento preview post-salvataggio
+**Step 2.4: Test frontend** [✓]
+- [x] Test apertura/chiusura ImageCropModal
+- [x] Test upload file desktop
+- [x] Test caricamento fotocamera (mock)
+- [x] Test ridimensionamento immagine
+- [x] Test invio base64 al backend
+- [x] Test aggiornamento preview post-salvataggio
 
 #### FASE 3: Integrazione & Verifica
 
-**Step 3.1: Connessione end-to-end** [ ]
-- [ ] Verificare flusso completo: upload → crop → backend → UI
-- [ ] Test errore backend → messaggio utente
-- [ ] Test rollback se errore (immagine precedente rimane visibile)
+**Step 3.1: Connessione end-to-end** [✓]
+- [x] Verificare flusso completo: upload → crop → backend → UI
+- [x] Test errore backend → messaggio utente
+- [x] Test rollback se errore (immagine precedente rimane visibile)
 
-**Step 3.2: Test manuale cross-device** [ ]
-- [ ] Desktop: upload file
-- [ ] Mobile: fotocamera + file
-- [ ] Immagini landscape, portrait, quadrate
-- [ ] Browser testing su dispositivi diversi
+**Step 3.2: Test manuale cross-device** [✓]
+- [x] Desktop: upload file
+- [x] Mobile: fotocamera + file
+- [x] Immagini landscape, portrait, quadrate
+- [x] Browser testing su dispositivi diversi
 
 ---
 
 ### Criteri di accettazione
 - [x] Piano di implementazione definito e approvato
-- [ ] La funzionalità è integrata nell'attuale modulo di valutazione prodotto
-- [ ] L'utente può sostituire l'immagine prodotto da file o fotocamera
-- [ ] Dopo il crop, l'immagine viene ridimensionata in formato quadrato (400x400px)
-- [ ] La nuova immagine sostituisce quella eventualmente esistente
-- [ ] Dopo il salvataggio, la preview prodotto mostra la nuova immagine
-- [ ] Gli errori non cancellano l'immagine precedente
-- [ ] Il backend salva solo immagini valide e controllate
-- [ ] Il flusso non richiede modifiche allo schema database
-- [ ] Test backend e frontend passano
-- [ ] Verificato su desktop e mobile
+- [x] La funzionalità è integrata nell'attuale modulo di valutazione prodotto
+- [x] L'utente può sostituire l'immagine prodotto da file o fotocamera
+- [x] Dopo il crop, l'immagine viene ridimensionata in formato quadrato (400x400px)
+- [x] La nuova immagine sostituisce quella eventualmente esistente
+- [x] Dopo il salvataggio, la preview prodotto mostra la nuova immagine
+- [x] Gli errori non cancellano l'immagine precedente
+- [x] Il backend salva solo immagini valide e controllate
+- [x] Il flusso non richiede modifiche allo schema database
+- [x] Test backend e frontend passano
+- [x] Verificato su desktop e mobile
+
 
 ### Strategie di sicurezza e rollback
 - Backend valida OGNI immagine prima di salvare

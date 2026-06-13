@@ -2,6 +2,7 @@
 import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import axios from 'axios'
 import ImageCropModal from './ImageCropModal.vue'
+import { validateImageFile } from '@/utils/imageFileValidation'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -158,6 +159,15 @@ async function handleImageFileSelected(event) {
   const file = target.files?.[0]
   if (!file) return
 
+  const validation = validateImageFile(file)
+  if (!validation.isValid) {
+    manualFormError.value = validation.error
+    if (fileInputRef.value) {
+      fileInputRef.value.value = ''
+    }
+    return
+  }
+
   try {
     await imageCropModalRef.value?.loadImageFromFile(file)
     showImageCropModal.value = true
@@ -178,6 +188,15 @@ async function handleCameraCapture(event) {
   const target = event.target
   const file = target.files?.[0]
   if (!file) return
+
+  const validation = validateImageFile(file)
+  if (!validation.isValid) {
+    manualFormError.value = validation.error
+    if (cameraInputRef.value) {
+      cameraInputRef.value.value = ''
+    }
+    return
+  }
 
   try {
     await imageCropModalRef.value?.loadImageFromFile(file)

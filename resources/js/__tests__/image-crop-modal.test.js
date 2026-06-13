@@ -37,6 +37,7 @@ describe('ImageCropModal', () => {
         cropperState.initCanvas.mockClear();
         cropperState.draw.mockClear();
         cropperState.reset.mockClear();
+        cropperState.getCroppedImage.mockClear();
         cropperState.image.value = { width: 120, height: 120 };
         cropperState.isLoading.value = false;
         cropperState.error.value = null;
@@ -60,5 +61,75 @@ describe('ImageCropModal', () => {
         expect(cropperState.initCanvas).toHaveBeenCalled();
         expect(cropperState.draw).toHaveBeenCalled();
         expect(wrapper.find('canvas').exists()).toBe(true);
+    });
+
+    it('chiude la modale ed emette close quando si clicca su Annulla', async () => {
+        const wrapper = mount(ImageCropModal, {
+            props: {
+                isOpen: true,
+            },
+        });
+
+        const buttons = wrapper.findAll('button');
+        let annullaBtn;
+        for (let i = 0; i < buttons.length; i++) {
+            if (buttons[i].text().includes('Annulla')) {
+                annullaBtn = buttons[i];
+                break;
+            }
+        }
+
+        expect(annullaBtn).toBeDefined();
+        await annullaBtn.trigger('click');
+
+        expect(wrapper.emitted('close')).toBeTruthy();
+        expect(cropperState.reset).toHaveBeenCalled();
+        expect(cropperState.image.value).toBeNull();
+    });
+
+    it('emette confirm con l immagine base64 quando si clicca su Conferma', async () => {
+        const wrapper = mount(ImageCropModal, {
+            props: {
+                isOpen: true,
+            },
+        });
+
+        const buttons = wrapper.findAll('button');
+        let confermaBtn;
+        for (let i = 0; i < buttons.length; i++) {
+            if (buttons[i].text().includes('Conferma')) {
+                confermaBtn = buttons[i];
+                break;
+            }
+        }
+
+        expect(confermaBtn).toBeDefined();
+        await confermaBtn.trigger('click');
+
+        expect(cropperState.getCroppedImage).toHaveBeenCalledWith('jpeg', 0.85);
+        expect(wrapper.emitted('confirm')).toBeTruthy();
+        expect(wrapper.emitted('confirm')[0][0]).toBe('data:image/jpeg;base64,stub');
+    });
+
+    it('chiama reset del cropper quando si clicca sul pulsante Reset', async () => {
+        const wrapper = mount(ImageCropModal, {
+            props: {
+                isOpen: true,
+            },
+        });
+
+        const buttons = wrapper.findAll('button');
+        let resetBtn;
+        for (let i = 0; i < buttons.length; i++) {
+            if (buttons[i].text().includes('Reset')) {
+                resetBtn = buttons[i];
+                break;
+            }
+        }
+
+        expect(resetBtn).toBeDefined();
+        await resetBtn.trigger('click');
+
+        expect(cropperState.reset).toHaveBeenCalled();
     });
 });
