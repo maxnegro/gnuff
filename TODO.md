@@ -94,15 +94,15 @@
   - [x] Aggiungere animazioni sottili per interazioni utente
 
 ### 2. Ottimizzazione Codice
-- [ ] **Rifattorizzare componenti Vue**
-  - [ ] Scomporre componenti grandi in componenti più piccoli e riutilizzabili
-  - [ ] Applicare pattern di design (es. composable per logica condivisa)
-  - [ ] Documentare composables e componenti complessi
+- [x] **Rifattorizzare componenti Vue**
+  - [x] Scomporre componenti grandi in componenti più piccoli e riutilizzabili
+  - [x] Applicare pattern di design (es. composable per logica condivisa)
+  - [x] Documentare composables e componenti complessi
 
-- [ ] **Ottimizzare le chiamate API**  
-  - [ ] Implementare il caching delle risposte API con Redis  
-  - [ ] Ridurre il numero di chiamate API tramite batching  
-  - [ ] Aggiungere rate limiting per proteggere l'API  
+- [x] **Ottimizzare le chiamate API**  
+  - [x] Implementare il caching delle risposte API con Redis  
+  - [x] Ridurre il numero di chiamate API tramite batching  
+  - [x] Aggiungere rate limiting per proteggere l'API  
 
 - [x] **Migliorare la gestione degli errori**  
   - [x] Implementare un sistema di errori personalizzato con messaggi chiari  
