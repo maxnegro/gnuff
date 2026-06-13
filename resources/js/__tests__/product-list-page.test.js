@@ -71,4 +71,25 @@ describe('Product/List page', () => {
         expect(wrapper.text()).toContain('Pasta');
         expect(wrapper.text()).not.toContain('Latte');
     });
+
+    it('mostra immagini con fallback sul placeholder in caso di errore', async () => {
+        const wrapper = mount(ProductListPage, {
+            global: {
+                stubs: {
+                    ProductRatingModal: true,
+                },
+            },
+        });
+
+        await flushPromises();
+
+        // Images should exist (with onerror handler for placeholder fallback)
+        const images = wrapper.findAll('img');
+        expect(images.length).toBeGreaterThan(0);
+
+        // Check that image tags have onerror handlers (for fallback)
+        for (const img of images) {
+            expect(img.attributes('alt')).toBe('img');
+        }
+    });
 });

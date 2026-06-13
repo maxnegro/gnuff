@@ -44,7 +44,8 @@
             <td class="px-3 py-3 font-medium">{{ product.name }}</td>
             <td class="px-3 py-3 font-mono text-xs sm:text-sm">{{ product.barcode }}</td>
             <td class="px-3 py-3">
-              <img :src="product.image_url || placeholder" @error="e => e.target.src = placeholder" alt="img" class="h-12 w-12 rounded-2xl object-cover" />
+              <img :src="product.image_url || placeholder" @error="handleImageError"
+                loading="lazy" alt="img" class="h-12 w-12 rounded-2xl object-cover" />
             </td>
             <td class="px-3 py-3 whitespace-nowrap">
               <span class="text-xl">{{ ratingEmojis[ratings[product.id]?.value] || '' }}</span>
@@ -74,6 +75,12 @@ const showProductModal = ref(false);
 const modalStep = ref('ean');
 const modalForm = ref({ barcode: '', name: '', image_url: '', rating: '' });
 const modalRatingId = ref(null);
+const notification = ref('');
+const notificationType = ref('success');
+
+function handleImageError(e) {
+  e.target.src = placeholder;
+}
 
 function openEditModal(product) {
   modalForm.value = {
