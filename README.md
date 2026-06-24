@@ -64,10 +64,12 @@ php artisan storage:link
 
 ### 5. Ottimizzare la configurazione
 ```bash
+php artisan config:clear
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 ```
+> **Nota**: L'applicazione usa Predis come client Redis per massima compatibilità. Assicurarsi che `REDIS_CLIENT=predis` nel `.env` o installare l'estensione PHP `phpredis`.
 
 ### 6. Impostare i permessi su directory critiche
 ```bash
