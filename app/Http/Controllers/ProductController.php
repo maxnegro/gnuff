@@ -187,9 +187,8 @@ class ProductController extends Controller
                 'image_url' => null,
             ];
 
-            if ($apiStatus === 1 && $apiProduct) {
-                // Prodotto trovato su OpenFoodFacts
-                // Aggiorna solo i campi null/vuoti nel DB
+            if ($apiProduct && is_array($apiProduct)) {
+                // Prodotto con dati validi da OFF (anche status 0)
                 $cachedApiImage = $imageCacheService->cacheRemoteImage(
                     $apiProduct['image_url'] ?? $apiProduct['image_front_url'] ?? null,
                     $barcode
@@ -198,7 +197,6 @@ class ProductController extends Controller
                 $fields['image_url'] = $product
                     ? ($imageCacheService->toStoragePath($product->image_url) ?? null)
                     : $cachedApiImage;
-                // Aggiorna solo se almeno un campo era vuoto e ora valorizzato
                 if ($product) {
                     $toUpdate = [];
                     if (! $product->name && $fields['name']) {
@@ -213,28 +211,13 @@ class ProductController extends Controller
                 } else {
                     $product = Product::create($fields);
                 }
-            } elseif ($apiStatus === 0 && ! $product) {
+            } elseif (! $product) {
                 // Prodotto non trovato né su DB né su OpenFoodFacts
                 return response()->json([
                     'product' => $fields,
                     'rating' => null,
                     'not_found' => true,
                 ]);
-            } elseif (! $product) {
-                // Errore generico o risposta inattesa
-                Log::warning('Unexpected external product response without local fallback.', [
-                    'barcode' => $barcode,
-                    'request_id' => $this->getRequestId(),
-                    'api_status' => $apiStatus,
-                    'api_error' => $apiError,
-                ]);
-
-                return $this->errorResponse(
-                    'OFF_INVALID_RESPONSE',
-                    $apiError ?? 'Errore nella risposta da OpenFoodFacts',
-                    502,
-                    $this->productLookupErrorDetails($barcode, $apiErrorCode, $apiRetryAfter)
-                );
             } else {
                 // Prodotto già in DB
                 $fields['name'] = $product->name;
